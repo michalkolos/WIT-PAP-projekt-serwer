@@ -15,7 +15,7 @@
 #include <syslog.h>
 
 
-int startServer(int serverIP, int serverPort){
+int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress){
 
     ///Creating server socket
     errno = 0;
@@ -32,13 +32,12 @@ int startServer(int serverIP, int serverPort){
 
 
     ///Creating server address struct
-    struct sockaddr_in serverAddress;
 
-        memset(&serverAddress, 0, sizeof(serverAddress));
+        memset(serverAddress, 0, sizeof(*serverAddress));
 
-	serverAddress.sin_family        = AF_INET;
-    serverAddress.sin_port          = serverPort;
-    serverAddress.sin_addr.s_addr   = serverIP;
+	serverAddress->sin_family        = AF_INET;
+    serverAddress->sin_port          = serverPort;
+    serverAddress->sin_addr.s_addr   = serverIP;
 
     // TODO: Report creation of address struct
 
@@ -47,8 +46,8 @@ int startServer(int serverIP, int serverPort){
     ///Binding server address to the socket
     errno = 0;
 	int bindStatus = bind(serverSocket,
-        (struct sockaddr*) &serverAddress,
-        sizeof(serverAddress)
+        (struct sockaddr*) serverAddress,
+        sizeof(*serverAddress)
     );
 
     if(bindStatus == -1)

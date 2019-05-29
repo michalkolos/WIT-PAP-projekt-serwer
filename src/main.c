@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "processes.h"
 #include "threadpool.h"
 #include "server.h"
+#include "connectionqueue.h"
+
 
 #define THREAD_NO 4
 
@@ -12,8 +15,8 @@
 
 int main(int argc, char const *argv[]){
     
-
-    startServer(0, 9000);
+    struct sockaddr_in serverAddress;
+    int serverSocket = startServer(0, 9000, &serverAddress);
 
     printf("Hello World!\n\n");
     printf("CPU count: %d\n\n", getCpuNumber());
@@ -40,17 +43,60 @@ int main(int argc, char const *argv[]){
 
     //     pthread_join( threads[i], NULL);
     // }
-    
-    threadPollInit(30);
+    // 
 
-    printThreadPool();
+    // ConnectionQueue connectionQueue;
+    ThreadPool threadPool;
+    // ConnectionQueue connectionQueue;
 
+    threadPollInit(&threadPool, 40, &serverSocket, &serverAddress);
+    // connectionQueueInit(&threadPool.connectionQueue);
 
+    printThreadPool(&threadPool);
 
-    while(1){
+    // sleep(2);
 
+    for (int i = 0; i < 1000000; i++)
+    {
+        connectionQueuePush(&threadPool.connectionQueue, i);
+        // printf("%d",connectionQueuePull(&threadPool.connectionQueue));
+        // connectionQueuePrint(&threadPool.connectionQueue);
     }
+    
+    sleep(10);
 
+    printf("\n\n");
+    connectionQueuePrint(&threadPool.connectionQueue);
+
+    
+    
+    
+    // ConnectionQueue queue;
+    // connectionQueueInit(&queue);
+
+    // connectionQueuePrint(&queue);
+
+    // for(int i = 0; i < 10; i++){
+    //     connectionQueuePush(&queue, i + 123124);
+    // }
+
+    // printf("\n\nPushing queue:\n");
+    // connectionQueuePush(&queue, 1234);
+    
+
+    // printf("\n\nPrinting queue:\n");
+    // connectionQueuePrint(&queue);
+    
+    // for(int i = 0; i < 10; i++){
+    //     printf("%d-",connectionQueuePull(&queue));
+    // }
+
+
+    // printf("\n\nValue form queue: %d", connectionQueuePull(&queue));
+    // printf("\n\nValue form queue: %d", connectionQueuePull(&queue));
+    
+    // printf("\n\nPrinting queue:\n");
+    // connectionQueuePrint(&queue);
 
     return 0;
 }
