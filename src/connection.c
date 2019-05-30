@@ -59,7 +59,7 @@ void messageAddNewBlock(Message* message, char* buffer, int size){
 void messageWrite(Message* message, char* buffer, int size){
 
     int noOfFullBlocks = message->blockLen % size;
-    
+
 
     for ( int i = 0; i < )
 }
@@ -100,3 +100,12 @@ char switchBoard(char* buffer, int size){
 
 
 }
+
+
+
+"data":{[
+    {   "table1": ["col01":{"name", "type"},
+                "col02":{"name", "type"}]
+        "table2": ["col01":{"name", "type"},
+                "col02":{"name", "type"}]
+    ] }
