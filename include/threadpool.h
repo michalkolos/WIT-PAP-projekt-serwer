@@ -49,6 +49,7 @@
 typedef struct ThreadPool ThreadPool;
 typedef struct Thread Thread;
 
+// TODO: Add struct Thread description.
 typedef struct Thread{
     
     pthread_t   id;
@@ -64,15 +65,12 @@ typedef struct Thread{
 }Thread;
 
 
-
+// TODO: Add struct ThreadPool description.
 typedef struct ThreadPool{
 
     Thread* threadListHead;
     int     threadCount;
     int     workingThreadsCount;
-    
-    struct  sockaddr_in* serverAddress;
-    int*    serverSocket;
 
     pthread_mutex_t mutex;
     ConnectionQueue connectionQueue;
@@ -90,13 +88,67 @@ typedef struct ThreadPool{
                                                               
 // =============================================================
 
-void threadPollInit(ThreadPool* threadPool, int threadNo, int* socket, struct sockaddr_in* address);
+
+
+
+/**
+ * @brief Initiates thread pool.
+ * 
+ * First function to run when using thread pool. It will initialise empty but 
+ * allocated ThreadPool object. Job queue, that supplies running threads with 
+ * socket descriptors of incoming connections, will be also initialied as empty. 
+ * Finally, a specified number of new threads will be created. Those threads 
+ * will handle connections suppied to them through the job queue as socket 
+ * descriptors. 
+ * 
+ * @param threadPool Pointer to an empty ThreadPool object.
+ * @param threadNo  Number of threads that will be available in the pool from the
+ * start. 
+ */
+void threadPollInit(ThreadPool* threadPool, int threadNo);
+
+
+// TODO: Finish threadPool description
+/**
+ * @brief Creates new worker thread.
+ * 
+ * 
+ * 
+ * @param threadPool 
+ * @return Thread* 
+ */
 Thread* spawnThread(ThreadPool* threadPool);
+
+/**
+ * @brief Function that is runs on every thread in the thread pool.
+ * 
+ * This function is executed on every new worker thread inside the thread pool.
+ * it consists of initialisation phase when some environmental variables for the
+ * thread are set. Those are current CPU the thread is running on, as well as 
+ * its PID and TID. After that comes the main, infinite loop of the thread. This is when 
+ * the thread waits for a new connection on the job queue and handles it. 
+ * 
+ * @param arg Generic pointer that is casted to the Thread* type. It holds all
+ * information about the thread as well as serves as a medium of communication
+ * with other elements of the server. 
+ * @return void* Unused, returns the same Thread* object that is supplied as the 
+ * function argument.
+ */
 void* threadFunction(void* arg);
+
+/**
+ * @brief Gets the number of the current CPU.
+ * 
+ * It looks for the number that represents the CPU for the thread that executes 
+ * this function. It does not differentiates between logical and physical cores.
+ * 
+ * @return int A number assigned to the current CPU by the OS. First core has
+ * number 0.
+ */
 int getCurrentCpuNo();
+
+// TODO: Delete printThreadPool test function.
 void printThreadPool(ThreadPool* threadPool);
-
-
 
 
 #endif

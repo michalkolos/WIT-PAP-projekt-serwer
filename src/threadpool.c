@@ -15,15 +15,13 @@
 
 #include "connectionqueue.h"
 #include "threadpool.h"
+#include "connection.h"
 
 
+// TODO: Add capability for creating and destroying additional threads. 
 
 
-void threadPollInit(ThreadPool* threadPool, int threadNo, int* socket, struct sockaddr_in* address){
-
-    threadPool->serverSocket = socket;
-    threadPool->serverAddress = address;
-    
+void threadPollInit(ThreadPool* threadPool, int threadNo){
 
     threadPool->workingThreadsCount = 0;
     threadPool->threadCount = 0;
@@ -41,7 +39,7 @@ void threadPollInit(ThreadPool* threadPool, int threadNo, int* socket, struct so
     return;
 }
 
-
+// TODO: Modify spawnThread function so it will put them directly into ThreadPool object instead returning it.
 Thread* spawnThread(ThreadPool* threadPool){
 
     Thread* thread = malloc(sizeof(Thread));
@@ -78,18 +76,21 @@ void* threadFunction(void* arg){
     
     ConnectionQueue* connectionQueue = &threadStruct->threadPoolPointer->connectionQueue;
 
-    int incommingConnection = 0;
+    int incomingConnection = 0;
     
     
     /// Thread's main loop
     while(1){
-        incommingConnection = connectionQueuePull(connectionQueue);
+        incomingConnection = connectionQueuePull(connectionQueue);
             
-            printf("Thread: %d on CPU: %d recieved: %d\n", 
-                threadStruct->altId,
-                threadStruct->cpu,
-                incommingConnection);
-        // }
+        printf("Thread: %d on CPU: %d from socket: %d received:\n", 
+            threadStruct->altId,
+            threadStruct->cpu,
+            incomingConnection);
+        
+        char buffer[512];
+
+        readFromSocket(incomingConnection, buffer, 512);
     }
 
     return arg;

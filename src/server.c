@@ -24,10 +24,12 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
     if (serverSocket == -1)
 	{
         // TODO: Creating socket error handling
+        printf("Error socket\n");
 	}
     else
     {
         // TODO: Reporting created socket.
+        printf("Socket ok\n");
     }
 
 
@@ -36,7 +38,7 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
         memset(serverAddress, 0, sizeof(*serverAddress));
 
 	serverAddress->sin_family        = AF_INET;
-    serverAddress->sin_port          = serverPort;
+    serverAddress->sin_port          = htons(serverPort);
     serverAddress->sin_addr.s_addr   = serverIP;
 
     // TODO: Report creation of address struct
@@ -53,10 +55,12 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
     if(bindStatus == -1)
 	{
         // TODO: Binding address error handling
+        printf("Error bind\n");
 	}
     else
     {
         // TODO: Address binding reporting
+        printf("Bind ok\n");
     }
 
     ///Creating connection queue on the server socket
@@ -66,11 +70,29 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
     if(listenStatus == -1)
 	{
         // TODO: Connection queue creation error reporting
+        printf("Error listen\n");
 	}
     else
     {
         // TODO: Connection queue creation reporting
+        printf("Listen ok\n");
     }
 
     return serverSocket;
+}
+
+
+int acceptConnection(int socket, struct sockaddr_in* clientAddress){
+
+    int clientSocket;
+    socklen_t sizeOfClientAddress = sizeof(clientAddress);
+    
+    errno = 0;
+    clientSocket =  accept(socket, (struct sockaddr *) clientAddress, &sizeOfClientAddress);
+ 
+    if (clientSocket == -1){
+        // TODO: Handle server accept errors.
+    }
+
+    return clientSocket;
 }
