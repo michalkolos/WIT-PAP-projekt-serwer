@@ -7,7 +7,7 @@
 #include "connectionqueue.h"
 
 
-#define THREAD_NO 4
+#define THREAD_NO 20
 
 
 
@@ -17,9 +17,9 @@ int main(int argc, char const *argv[]){
     struct sockaddr_in serverAddress;
     int serverSocket = startServer(0, 9000, &serverAddress);
 
-    printf("CPU count: %d\n\n", getCpuNumber());
+    // printf("CPU count: %d\n\n", getCpuNumber());
 
-    getStats();
+    // getStats();
 
     ThreadPool threadPool;
 
