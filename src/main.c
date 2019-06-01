@@ -5,7 +5,7 @@
 #include "threadpool.h"
 #include "server.h"
 #include "connectionqueue.h"
-
+#include "log.h"
 
 #define THREAD_NO 20
 
@@ -14,29 +14,29 @@
 
 int main(int argc, char const *argv[]){
     
-    struct sockaddr_in serverAddress;
-    int serverSocket = startServer(0, 9000, &serverAddress);
-
-    // printf("CPU count: %d\n\n", getCpuNumber());
-
-    // getStats();
-
-    ThreadPool threadPool;
-
-    threadPollInit(&threadPool, 40, &serverSocket, &serverAddress);
-
-    printThreadPool(&threadPool);
+    log(1, "first string ", "second string");
 
 
-    for (int i = 0; i < 1000000; i++)
-    {
-        connectionQueuePush(&threadPool.connectionQueue, i);
-    }
+    // struct sockaddr_in serverAddress;
+    // int serverSocket = startServer(0, 9000, &serverAddress);
+
+
+    // ThreadPool threadPool;
+
+    // threadPollInit(&threadPool, 40, &serverSocket, &serverAddress);
+
+    // printThreadPool(&threadPool);
+
+
+    // for (int i = 0; i < 1000000; i++)
+    // {
+    //     connectionQueuePush(&threadPool.connectionQueue, i);
+    // }
     
-    sleep(10);
+    // sleep(10);
 
-    printf("\n\n");
-    connectionQueuePrint(&threadPool.connectionQueue);
+    // printf("\n\n");
+    // connectionQueuePrint(&threadPool.connectionQueue);
 
     return 0;
 }
