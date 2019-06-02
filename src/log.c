@@ -196,3 +196,5 @@ LogSettings getLogSettings(LogQueue* queue){
 
     return settings;
 }
+
+// TODO: Add function that sets log settings.
