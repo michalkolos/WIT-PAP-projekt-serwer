@@ -33,7 +33,7 @@ void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo, int* s
 
     threadPool->threadListHead = spawnThread(threadPool);
     if(threadPool->threadListHead == NULL){
-        log(logq, FATAL, "Error creating worker thread pool.");
+        logm(logq, FATAL, "Error creating worker thread pool.");
         exit(EXIT_FAILURE);
     }
 
@@ -44,16 +44,16 @@ void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo, int* s
     }
 
     if(threadPool->threadCount <= 0){
-        log(logq, FATAL, "Error creating worker thread pool.");
+        logm(logq, FATAL, "Error creating worker thread pool.");
         exit(EXIT_FAILURE);
     }
     if(threadPool->threadCount != threadNo){
-        log(logq, WARNING, "Amount of created worker threads different than ordered: %d.", 
+        logm(logq, WARNING, "Amount of created worker threads different than ordered: %d.", 
             threadPool->threadCount);
     }
 
     if(threadPool->threadCount == threadNo){
-        log(logq, DEBUG, "Created worker thread pool of %d threads.", 
+        logm(logq, DEBUG, "Created worker thread pool of %d threads.", 
             threadPool->threadCount);
     }
 
@@ -67,7 +67,7 @@ Thread* spawnThread(ThreadPool* threadPool){
     Thread* thread = malloc(sizeof(Thread));
 
     if(thread == NULL){
-        log(logq, FATAL, "Error creating worker thread struct.");
+        logm(logq, FATAL, "Error creating worker thread struct.");
         exit(EXIT_FAILURE);
     }
 
@@ -78,12 +78,12 @@ Thread* spawnThread(ThreadPool* threadPool){
     errno = 0;
     int createState = pthread_create (&thread->id, NULL, threadFunction, (void*)thread);
     if(createState != 0){
-        log(logq, ERROR, "Error spawning thread | %s", strerror(errno));
+        logm(logq, ERROR, "Error spawning thread | %s", strerror(errno));
         free(thread);
         return NULL;
     }
 
-    log(logq, DEBUG, "Spawned thread %ld.", thread->id);
+    logm(logq, DEBUG, "Spawned thread %ld.", thread->id);
     
     threadPool->threadCount++;
     return thread;
@@ -103,19 +103,19 @@ void* threadFunction(void* arg){
     /// Checking id of the CPU that is running the thread
     threadStruct->cpu = getCurrentCpuNo();
     if(threadStruct->cpu == -1){
-        log(logq, ERROR, "Error reading CPU id | %s", strerror(errno));
+        logm(logq, ERROR, "Error reading CPU id | %s", strerror(errno));
     }
 
     /// Geting TID of the thread
     errno = 0;
     threadStruct->altId = syscall(__NR_gettid);
     if(threadStruct->altId == -1){
-        log(logq, ERROR, "Error reading thread TID | %s", strerror(errno));
+        logm(logq, ERROR, "Error reading thread TID | %s", strerror(errno));
     }
 
     int incomingConnection = 0;
     
-    log(logq, DEBUG, "%s", "Worker thread ready.");
+    logm(logq, DEBUG, "%s", "Worker thread ready.");
 
     /// Thread's main loop
     while(1){

@@ -88,7 +88,7 @@ void logQueueInit(LogQueue* queue,  char consoleLevel,
                                     char syslogLevel, 
                                     char fileLevel, 
                                     char dbaseLevel);
-void log(LogQueue* queue, int level, const char *format, ...);
+void logm(LogQueue* queue, int level, const char *format, ...);
 void* logThreadFunction(void* arg);
 LogMessage* readFromLogQueue(LogQueue* queue);
 LogSettings getLogSettings(LogQueue* queue);

@@ -54,7 +54,7 @@ void logQueueInit(LogQueue* queue,  char consoleLevel,
 
 
 
-void log(LogQueue* queue, int level, const char *format, ...){
+void logm(LogQueue* queue, int level, const char *format, ...){
 
     struct timespec timestamp;
     timespec_get (&timestamp, TIME_UTC);
