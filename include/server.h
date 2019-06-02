@@ -5,6 +5,7 @@
 
 #include "log.h"
 
-int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress, LogQueue* logq);
+int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress, LogQueue* NewLogq);
+void serverAcceptConnection(int serverSocket, ConnectionQueue* connectionQueue);
 
 #endif

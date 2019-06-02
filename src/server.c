@@ -15,8 +15,13 @@
 #include <syslog.h>
 
 #include "log.h"
+#include "connectionqueue.h"
 
-int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress, LogQueue* logq){
+LogQueue* logq;
+
+int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress, LogQueue* newLogq){
+
+    logq = newLogq;
 
     ///Creating server socket
     errno = 0;
@@ -81,3 +86,38 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress,
 
     return serverSocket;
 }
+
+
+
+
+void serverAcceptConnection(int serverSocket, ConnectionQueue* connectionQueue){
+    int clientSocket;
+    
+    struct sockaddr_in clientAddress;
+    memset(&clientAddress, 0, sizeof(clientAddress));
+
+    socklen_t sizeOfClientAddress = sizeof(clientAddress);
+
+    errno = 0;
+    clientSocket =  accept(serverSocket, (struct sockaddr *) &clientAddress, &sizeOfClientAddress);
+
+    char addressString[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(clientAddress.sin_addr.s_addr), addressString, INET_ADDRSTRLEN);
+
+    if(clientSocket == -1){
+        logm(logq, ERROR, "Unable to connect with client: %s:%d | %s",
+            addressString,
+            ntohs(clientAddress.sin_port),
+            strerror(errno));
+    }else{
+        logm(logq, INFO, "Accepted connection with client: %s:%d ",
+            addressString,
+            ntohs(clientAddress.sin_port));
+    }
+
+    connectionQueuePush(connectionQueue, clientSocket);
+
+    return;
+}
+
+ 

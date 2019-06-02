@@ -16,18 +16,18 @@
 int main(int argc, char const *argv[]){
 
     LogQueue logq;
-    logQueueInit(&logq, 6, 6, 6, 6);
+    logQueueInit(&logq, DEBUG, DEBUG, DEBUG, DEBUG);
  
     struct sockaddr_in serverAddress;
     int serverSocket = startServer(0, 9000, &serverAddress, &logq);
 
     ThreadPool threadPool;
-    threadPollInit(&threadPool, &logq, 40, &serverSocket, &serverAddress);
+    threadPollInit(&threadPool, &logq, THREAD_NO, &serverSocket, &serverAddress);
 
     // printThreadPool(&threadPool);
 
     while(1){
-
+        serverAcceptConnection(serverSocket, &(threadPool.connectionQueue));
     }
 
     return 0;
