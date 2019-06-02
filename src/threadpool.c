@@ -8,8 +8,6 @@
 #include <sys/prctl.h>
 #include <malloc.h>
 #include <sched.h>
-#include <sys/sysinfo.h>
-#include <sys/types.h>
 #include <sys/syscall.h>
 #include <sys/socket.h>
 

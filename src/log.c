@@ -5,6 +5,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/sysinfo.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
 
 #include "log.h"
  
@@ -16,7 +19,10 @@
 
 
 
-void logQueueInit(LogQueue* queue){
+void logQueueInit(LogQueue* queue,  char consoleLevel, 
+                                    char syslogLevel, 
+                                    char fileLevel, 
+                                    char dbaseLevel){
 
     int status = pthread_mutex_init(&(queue->mutex), NULL);
     if(status != 0){
@@ -27,6 +33,11 @@ void logQueueInit(LogQueue* queue){
     if(status != 0){
         // TODO: Handle condition variable initialisation error.
     }
+
+    queue->toConsole = consoleLevel;
+    queue->toSyslog = syslogLevel;
+    queue->toLogFile = fileLevel;
+    queue->toDBase = dbaseLevel;
 
     pthread_mutex_lock(&queue->mutex);
     queue->tail = NULL;
@@ -40,7 +51,7 @@ void logQueueInit(LogQueue* queue){
         // TODO: handle thread_create errors
         perror("pthread_create:");
     }
-
+ 
     return;
 }
 
@@ -59,6 +70,7 @@ void logm(LogQueue* queue, int level, const char *str, ...){
 
     message->level = level;
     message->timestamp = timestamp;
+    message->tid = syscall(__NR_gettid);
     message->string[0] = '\0';
 
     va_list arg;
@@ -72,7 +84,7 @@ void logm(LogQueue* queue, int level, const char *str, ...){
 
     va_end(arg);
 
-    printf("%s", message->string);
+    // printf("%s", message->string);
 
     pthread_mutex_lock(&queue->mutex);
     
@@ -103,23 +115,51 @@ void* logThreadFunction(void* arg){
     LogQueue* queue = (LogQueue*) arg;
     // TODO: Additional thread initialisation.
 
+    //log levels
+    const char* logLabel[] = {
+        "  [ALL]",    // 0
+        "[FATAL]",    // 1
+        "[ERROR]",    // 2
+        " [WARN]",    // 3
+        " [INFO]",    // 4
+        "[DEBUG]"     // 5
+    };
+
+
+
+
     LogMessage* incomingLog;
     while(1){
         incomingLog = readFromLogQueue(queue);
+ 
 
+        if(incomingLog->level <= queue->toConsole){
+
+            struct tm timestamp = *localtime(&incomingLog->timestamp.tv_sec);
+
+            printf("%s [%02d-%02d-%04d %02d:%02d:%02d] %s (in thread: %d)\n", 
+                logLabel[incomingLog->level],
+                timestamp.tm_mday,
+                timestamp.tm_mon + 1,
+                timestamp.tm_year + 1900,
+                timestamp.tm_hour,
+                timestamp.tm_min,
+                timestamp.tm_sec,
+                incomingLog->string,
+                incomingLog->tid);
+        }
+        
     // TODO: Parse time in timestamps of log messages.
 
     // TODO: Handle message:
-    // TODO: Print log message in console.
     // TODO: Send log message to syslog.
     // TODO: Write log message to file.
     // TODO: Save log message in data base.
     // 
-
-        free(incomingLog);
+ 
     }
 
-    return;
+    return arg;
 }
 
 
@@ -150,4 +190,17 @@ LogMessage* readFromLogQueue(LogQueue* queue){
     pthread_mutex_unlock(&queue->mutex);
 
     return returnMessage;
+}
+
+
+const char* my_itoa(int num){
+
+    static char buf[sizeof(int) * 8];
+    int len = sizeof(buf);
+
+    if (snprintf(buf, len, "%d", num) == -1){
+        return "";
+    }
+
+  return buf;
 }

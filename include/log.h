@@ -17,6 +17,14 @@
 
 #define log(...) logm(__VA_ARGS__, NULL)
 
+// Logging levels:
+#define NO_LOG  0
+#define FATAL   1
+#define ERROR   2
+#define WARNING 3
+#define INFO    4
+#define DEBUG   5
+
 
 
 
@@ -42,12 +50,18 @@ struct LogQueue{
    	pthread_mutex_t mutex;             // Takes care of access to the queeue.
     pthread_cond_t  conditionVar;
     pthread_t       loggingThreadId;
+
+    char toConsole;
+    char toSyslog;
+    char toLogFile;
+    char toDBase;
 };
 
 
 struct LogMessage{
     struct timespec timestamp;
     int             level;
+    int             tid;
     char            string[LOG_MESSAGE_LEN];
     
     LogMessage*     nextMessage;
@@ -65,9 +79,14 @@ struct LogMessage{
 // =============================================================
 
 
-void logQueueInit(LogQueue* queue);
+void logQueueInit(LogQueue* queue,  char consoleLevel, 
+                                    char syslogLevel, 
+                                    char fileLevel, 
+                                    char dbaseLevel);
 void logm(LogQueue* queue, int level, const char *str, ...);
 void* logThreadFunction(void* arg);
 LogMessage* readFromLogQueue(LogQueue* queue);
+
+const char* my_itoa(int num);
 
 #endif
