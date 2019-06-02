@@ -40,6 +40,14 @@
 
 typedef struct LogQueue LogQueue;
 typedef struct LogMessage LogMessage;
+typedef struct LogSettings LogSettings;
+
+struct LogSettings{
+    char toConsole;
+    char toSyslog;
+    char toLogFile;
+    char toDBase;
+};
 
 struct LogQueue{
     LogMessage* tail;
@@ -51,12 +59,8 @@ struct LogQueue{
     pthread_cond_t  conditionVar;
     pthread_t       loggingThreadId;
 
-    char toConsole;
-    char toSyslog;
-    char toLogFile;
-    char toDBase;
+    LogSettings     settings;
 };
-
 
 struct LogMessage{
     struct timespec timestamp;
@@ -66,6 +70,7 @@ struct LogMessage{
     
     LogMessage*     nextMessage;
 };
+
 
 
 
@@ -86,7 +91,7 @@ void logQueueInit(LogQueue* queue,  char consoleLevel,
 void log(LogQueue* queue, int level, const char *format, ...);
 void* logThreadFunction(void* arg);
 LogMessage* readFromLogQueue(LogQueue* queue);
+LogSettings getLogSettings(LogQueue* queue);
 
-const char* my_itoa(int num);
 
 #endif

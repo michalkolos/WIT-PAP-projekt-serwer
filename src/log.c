@@ -15,10 +15,6 @@
  
 
 
-
-
-
-
 void logQueueInit(LogQueue* queue,  char consoleLevel, 
                                     char syslogLevel, 
                                     char fileLevel, 
@@ -34,10 +30,10 @@ void logQueueInit(LogQueue* queue,  char consoleLevel,
         // TODO: Handle condition variable initialisation error.
     }
 
-    queue->toConsole = consoleLevel;
-    queue->toSyslog = syslogLevel;
-    queue->toLogFile = fileLevel;
-    queue->toDBase = dbaseLevel;
+    queue->settings.toConsole = consoleLevel;
+    queue->settings.toSyslog = syslogLevel;
+    queue->settings.toLogFile = fileLevel;
+    queue->settings.toDBase = dbaseLevel;
 
     pthread_mutex_lock(&queue->mutex);
     queue->tail = NULL;
@@ -121,15 +117,13 @@ void* logThreadFunction(void* arg){
         "[DEBUG]"     // 5
     };
 
-
-
-
     LogMessage* incomingLog;
+    LogSettings settings;
     while(1){
         incomingLog = readFromLogQueue(queue);
- 
+        settings = getLogSettings(queue);
 
-        if(incomingLog->level <= queue->toConsole){
+        if(incomingLog->level <= settings.toConsole){
 
             struct tm timestamp = *localtime(&incomingLog->timestamp.tv_sec);
 
@@ -145,13 +139,17 @@ void* logThreadFunction(void* arg){
                 incomingLog->tid);
         }
         
-    // TODO: Parse time in timestamps of log messages.
+        if(incomingLog->level <= settings.toSyslog){
+            // TODO: Send log message to syslog.
+        }
 
-    // TODO: Handle message:
-    // TODO: Send log message to syslog.
-    // TODO: Write log message to file.
-    // TODO: Save log message in data base.
-    // 
+        if(incomingLog->level <= settings.toLogFile){
+            // TODO: Write log message to file.
+        }
+
+        if(incomingLog->level <= settings.toDBase){
+            // TODO: Save log message in data base.
+        }
  
     }
 
@@ -188,15 +186,13 @@ LogMessage* readFromLogQueue(LogQueue* queue){
     return returnMessage;
 }
 
+LogSettings getLogSettings(LogQueue* queue){
 
-const char* my_itoa(int num){
+    pthread_mutex_lock(&queue->mutex);
 
-    static char buf[sizeof(int) * 8];
-    int len = sizeof(buf);
+    LogSettings settings = queue->settings;
 
-    if (snprintf(buf, len, "%d", num) == -1){
-        return "";
-    }
+    pthread_mutex_unlock(&queue->mutex);
 
-  return buf;
+    return settings;
 }
