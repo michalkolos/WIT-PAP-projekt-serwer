@@ -61,6 +61,7 @@ Thread* spawnThread(ThreadPool* threadPool){
         perror("pthread_create:");
     }
 
+        // TODO: Delete next line
     printf("Spawned thread %ld\n", thread->id);
     
     threadPool->threadCount++;

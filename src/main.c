@@ -13,8 +13,10 @@
 
 
 int main(int argc, char const *argv[]){
+
+    LogQueue queue;
     
-    log(1, "first string ", "second string");
+    log(&queue, 1, "first string ", "second string");
 
 
     // struct sockaddr_in serverAddress;

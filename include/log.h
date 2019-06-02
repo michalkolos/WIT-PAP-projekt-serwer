@@ -65,6 +65,6 @@ struct LogMessage{
 // =============================================================
 
 
-void logm(int level, const char *str, ...);
+void logm(LogQueue* queue, int level, const char *str, ...);
 
 #endif
