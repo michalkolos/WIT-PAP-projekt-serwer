@@ -65,6 +65,9 @@ struct LogMessage{
 // =============================================================
 
 
+void logQueueInit(LogQueue* queue);
 void logm(LogQueue* queue, int level, const char *str, ...);
+void* logThreadFunction(void* arg);
+LogMessage* readFromLogQueue(LogQueue* queue);
 
 #endif

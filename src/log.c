@@ -10,8 +10,6 @@
  
 // unsigned long time_in_micros = 1000000 * tv.tv_sec + tv.tv_usec;
  
-void logQueueInit(LogQueue* queue);
-void* logThreadFunction(void* arg);
 
 
 
@@ -104,3 +102,30 @@ void logm(LogQueue* queue, int level, const char *str, ...){
 }
 
 
+LogMessage* readFromLogQueue(LogQueue* queue){
+
+    LogMessage* returnMessage = NULL;
+
+    pthread_mutex_lock(&queue->mutex);
+
+        while (queue->size == 0) {
+		pthread_cond_wait(&queue->conditionVar, &queue->mutex);
+	}
+
+    if(queue->head != NULL){
+        LogMessage* oldHead = queue->head;
+        queue->head = queue->head->nextMessage;
+
+        returnMessage = oldHead;
+        queue->size--;
+    }
+    
+    if(queue->size == 0){
+        queue->head = NULL;
+        queue->tail = NULL;
+    }
+
+    pthread_mutex_unlock(&queue->mutex);
+
+    return returnMessage;
+}
