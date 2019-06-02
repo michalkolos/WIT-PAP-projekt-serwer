@@ -15,42 +15,16 @@
 
 int main(int argc, char const *argv[]){
 
-    LogQueue queue;
-    
-    logQueueInit(&queue, 5, 5, 5, 5);
-
-
-    for(int i = 0; i < 1000000; i++){
-    
-    char buffer [1024];
-
-    log(&queue, 4, "%s %s %s %s %s %s %05d", "this ", "is ", "a ", "new ", "log ", "entry.", i);
-
-
-    }
+    LogQueue logq;
+    logQueueInit(&logq, 6, 6, 6, 6);
  
-
-
     struct sockaddr_in serverAddress;
     int serverSocket = startServer(0, 9000, &serverAddress);
 
-
     ThreadPool threadPool;
+    threadPollInit(&threadPool, &logq, 40, &serverSocket, &serverAddress);
 
-    threadPollInit(&threadPool, 40, &serverSocket, &serverAddress);
-
-    printThreadPool(&threadPool);
-
-
-    for (int i = 0; i < 1000000; i++)
-    {
-        connectionQueuePush(&threadPool.connectionQueue, i);
-    }
-    
-    // sleep(10);
-
-    // printf("\n\n");
-    // connectionQueuePrint(&threadPool.connectionQueue);
+    // printThreadPool(&threadPool);
 
     while(1){
 

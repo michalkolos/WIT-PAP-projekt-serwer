@@ -10,18 +10,21 @@
 #include <sched.h>
 #include <sys/syscall.h>
 #include <sys/socket.h>
+#include <string.h>
 
 #include "connectionqueue.h"
 #include "threadpool.h"
+#include "log.h"
 
 
 
 
-void threadPollInit(ThreadPool* threadPool, int threadNo, int* socket, struct sockaddr_in* address){
+void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo, int* socket, struct sockaddr_in* address){
 
     threadPool->serverSocket = socket;
     threadPool->serverAddress = address;
     
+    threadPool->logq = logq;
 
     threadPool->workingThreadsCount = 0;
     threadPool->threadCount = 0;
@@ -29,6 +32,10 @@ void threadPollInit(ThreadPool* threadPool, int threadNo, int* socket, struct so
     connectionQueueInit(&threadPool->connectionQueue);
 
     threadPool->threadListHead = spawnThread(threadPool);
+    if(threadPool->threadListHead == NULL){
+        log(logq, FATAL, "Error creating worker thread pool.");
+        exit(EXIT_FAILURE);
+    }
 
     Thread* newThread = threadPool->threadListHead;
     for(int i = 0; i < threadNo -1; i++){
@@ -36,16 +43,32 @@ void threadPollInit(ThreadPool* threadPool, int threadNo, int* socket, struct so
         newThread = newThread->nextThread;
     }
 
+    if(threadPool->threadCount <= 0){
+        log(logq, FATAL, "Error creating worker thread pool.");
+        exit(EXIT_FAILURE);
+    }
+    if(threadPool->threadCount != threadNo){
+        log(logq, WARNING, "Amount of created worker threads different than ordered: %d.", 
+            threadPool->threadCount);
+    }
+
+    if(threadPool->threadCount == threadNo){
+        log(logq, DEBUG, "Created worker thread pool of %d threads.", 
+            threadPool->threadCount);
+    }
+
     return;
 }
 
 
 Thread* spawnThread(ThreadPool* threadPool){
+    LogQueue* logq = threadPool->logq;
 
     Thread* thread = malloc(sizeof(Thread));
 
     if(thread == NULL){
-        // TODO: thread list struct creation error handling.
+        log(logq, FATAL, "Error creating worker thread struct.");
+        exit(EXIT_FAILURE);
     }
 
     thread->nextThread = NULL;
@@ -55,12 +78,12 @@ Thread* spawnThread(ThreadPool* threadPool){
     errno = 0;
     int createState = pthread_create (&thread->id, NULL, threadFunction, (void*)thread);
     if(createState != 0){
-        // TODO: handle thread_create errors
-        perror("pthread_create:");
+        log(logq, ERROR, "Error spawning thread | %s", strerror(errno));
+        free(thread);
+        return NULL;
     }
 
-        // TODO: Delete next line
-    printf("Spawned thread %ld\n", thread->id);
+    log(logq, DEBUG, "Spawned thread %ld.", thread->id);
     
     threadPool->threadCount++;
     return thread;
@@ -71,24 +94,37 @@ void* threadFunction(void* arg){
     
     /// Initialising thread
     Thread* threadStruct = (Thread*) arg;
-    threadStruct->state = THREAD_STATE_INIT;
-    threadStruct->cpu = getCurrentCpuNo();
-    threadStruct->altId = syscall(__NR_gettid);
-    
-    ConnectionQueue* connectionQueue = &threadStruct->threadPoolPointer->connectionQueue;
 
-    int incommingConnection = 0;
+    ConnectionQueue* connectionQueue = &threadStruct->threadPoolPointer->connectionQueue;
+    LogQueue* logq = threadStruct->threadPoolPointer->logq; 
     
+    threadStruct->state = THREAD_STATE_INIT;
     
+    /// Checking id of the CPU that is running the thread
+    threadStruct->cpu = getCurrentCpuNo();
+    if(threadStruct->cpu == -1){
+        log(logq, ERROR, "Error reading CPU id | %s", strerror(errno));
+    }
+
+    /// Geting TID of the thread
+    errno = 0;
+    threadStruct->altId = syscall(__NR_gettid);
+    if(threadStruct->altId == -1){
+        log(logq, ERROR, "Error reading thread TID | %s", strerror(errno));
+    }
+
+    int incomingConnection = 0;
+    
+    log(logq, DEBUG, "%s", "Worker thread ready.");
+
     /// Thread's main loop
     while(1){
-        incommingConnection = connectionQueuePull(connectionQueue);
+        incomingConnection = connectionQueuePull(connectionQueue);
             
             printf("Thread: %d on CPU: %d recieved: %d\n", 
                 threadStruct->altId,
                 threadStruct->cpu,
-                incommingConnection);
-        // }
+                incomingConnection);
     }
 
     return arg;
@@ -103,10 +139,6 @@ int getCurrentCpuNo(){
     int c, s;
     s = getcpu(&c, NULL, NULL);
     int cpuNo = (s == -1) ? s : c;
-
-    if(cpuNo == -1){
-        // TODO: getcpu error handling
-    }
 
     return cpuNo;
 }
