@@ -94,12 +94,34 @@ void logm(LogQueue* queue, int level, const char *str, ...){
 
     pthread_mutex_unlock(&queue->mutex);
 
+    return;
+}
 
 
+void* logThreadFunction(void* arg){
 
+    LogQueue* queue = (LogQueue*) arg;
+    // TODO: Additional thread initialisation.
+
+    LogMessage* incomingLog;
+    while(1){
+        incomingLog = readFromLogQueue(queue);
+
+    // TODO: Parse time in timestamps of log messages.
+
+    // TODO: Handle message:
+    // TODO: Print log message in console.
+    // TODO: Send log message to syslog.
+    // TODO: Write log message to file.
+    // TODO: Save log message in data base.
+    // 
+
+        free(incomingLog);
+    }
 
     return;
 }
+
 
 
 LogMessage* readFromLogQueue(LogQueue* queue){
