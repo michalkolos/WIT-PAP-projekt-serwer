@@ -3,17 +3,23 @@
 #include <stdlib.h>
 
 #include "connectionqueue.h"
+#include "log.h"
 
-void connectionQueueInit(ConnectionQueue* queue){
+LogQueue* logq;
+
+void connectionQueueInit(ConnectionQueue* queue, LogQueue* newLogq){
     
+    logq = newLogq;
     int status = pthread_mutex_init(&(queue->mutex), NULL);
     if(status != 0){
-        // TODO: Handle mutex initialisation error.
+        logm(logq, FATAL, "Unable to initialize connection queue mutex.");
+        exit(EXIT_FAILURE);
     }
 
     status = pthread_cond_init(&(queue->conditionVar), NULL);
     if(status != 0){
-        // TODO: Handle condition variable initialisation error.
+        logm(logq, FATAL, "Unable to initialize condition variable for connection queue.");
+        exit(EXIT_FAILURE);
     }
 
     pthread_mutex_lock(&queue->mutex);
@@ -27,11 +33,12 @@ void connectionQueueInit(ConnectionQueue* queue){
 
 void connectionQueuePush(ConnectionQueue* queue, int socket){
     
-    Connection* newConneciton = malloc(sizeof(Connection));
-    if(newConneciton == NULL){
-        // TODO: Adding connection to queue malloc error handling.
+    Connection* newConnection = malloc(sizeof(Connection));
+    if(newConnection == NULL){
+        logm(logq, FATAL, "Unable to allocate memory for a new Connection struct.");
+        exit(EXIT_FAILURE);
     }    
-    newConneciton->socket = socket;
+    newConnection->socket = socket;
 
 
     pthread_mutex_lock(&queue->mutex);
@@ -39,17 +46,19 @@ void connectionQueuePush(ConnectionQueue* queue, int socket){
     queue->size++;
     
     if (queue->head == NULL){
-        queue->head = newConneciton;
-        queue->tail = newConneciton;
+        queue->head = newConnection;
+        queue->tail = newConnection;
         
         pthread_cond_signal(&queue->conditionVar);
-        // TODO: Log waking up one thread from thread pool.
+        logm(logq, DEBUG, "Sent wake-up signal to one worker thread (connection queue size: %d).",
+            queue->size);
     }else{
-        queue->tail->nextConnection = newConneciton;
-        queue->tail = newConneciton;
+        queue->tail->nextConnection = newConnection;
+        queue->tail = newConnection;
 
         pthread_cond_broadcast(&queue->conditionVar);
-        // TODO: Log waking up all threads from thread pool.
+        logm(logq, DEBUG, "Sent wake-up signal to all worker threads (connection queue size: %d).",
+            queue->size);
     }
 
     pthread_mutex_unlock(&queue->mutex);
@@ -63,7 +72,8 @@ int connectionQueuePull(ConnectionQueue* queue){
 
     pthread_mutex_lock(&queue->mutex);
 
-        while (queue->size == 0) {
+    while (queue->size == 0) {
+        logm(logq, DEBUG, "Worker waiting for new connections.");
 		pthread_cond_wait(&queue->conditionVar, &queue->mutex);
 	}
 
@@ -74,6 +84,7 @@ int connectionQueuePull(ConnectionQueue* queue){
         socket = oldHead->socket;
         free(oldHead);
         queue->size--;
+        logm(logq, DEBUG, "Worker thread received new connection: %d", socket);
     }
     
     if(queue->size == 0){

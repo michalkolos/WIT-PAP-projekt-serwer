@@ -29,7 +29,7 @@ void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo, int* s
     threadPool->workingThreadsCount = 0;
     threadPool->threadCount = 0;
 
-    connectionQueueInit(&threadPool->connectionQueue);
+    connectionQueueInit(&threadPool->connectionQueue, logq);
 
     threadPool->threadListHead = spawnThread(threadPool);
     if(threadPool->threadListHead == NULL){
@@ -53,7 +53,7 @@ void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo, int* s
     }
 
     if(threadPool->threadCount == threadNo){
-        logm(logq, DEBUG, "Created worker thread pool of %d threads.", 
+        logm(logq, INFO, "Created worker thread pool of %d threads.", 
             threadPool->threadCount);
     }
 
