@@ -15,7 +15,7 @@
 
 #define LOG_MESSAGE_LEN 512
 
-#define log(...) logm(__VA_ARGS__, NULL)
+// #define log(...) logm(__VA_ARGS__, NULL)
 
 // Logging levels:
 #define NO_LOG  0
@@ -83,7 +83,7 @@ void logQueueInit(LogQueue* queue,  char consoleLevel,
                                     char syslogLevel, 
                                     char fileLevel, 
                                     char dbaseLevel);
-void logm(LogQueue* queue, int level, const char *str, ...);
+void log(LogQueue* queue, int level, const char *format, ...);
 void* logThreadFunction(void* arg);
 LogMessage* readFromLogQueue(LogQueue* queue);
 

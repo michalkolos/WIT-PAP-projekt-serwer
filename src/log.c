@@ -58,7 +58,7 @@ void logQueueInit(LogQueue* queue,  char consoleLevel,
 
 
 
-void logm(LogQueue* queue, int level, const char *str, ...){
+void log(LogQueue* queue, int level, const char *format, ...){
 
     struct timespec timestamp;
     timespec_get (&timestamp, TIME_UTC);
@@ -75,16 +75,12 @@ void logm(LogQueue* queue, int level, const char *str, ...){
 
     va_list arg;
 
-    va_start(arg, str);
+    va_start(arg, format);
 
-    while (str) { 
-        strncat(message->string, str, LOG_MESSAGE_LEN);
-        str = va_arg(arg, const char *);
-    }
+
+    vsnprintf(message->string, LOG_MESSAGE_LEN, format, arg);
 
     va_end(arg);
-
-    // printf("%s", message->string);
 
     pthread_mutex_lock(&queue->mutex);
     
