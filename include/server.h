@@ -3,6 +3,8 @@
 
 #include <netinet/in.h>
 
-int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress);
+#include "log.h"
+
+int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress, LogQueue* logq);
 
 #endif

@@ -14,8 +14,9 @@
 #include <sys/stat.h>
 #include <syslog.h>
 
+#include "log.h"
 
-int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress){
+int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress, LogQueue* logq){
 
     ///Creating server socket
     errno = 0;
@@ -23,11 +24,11 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
 
     if (serverSocket == -1)
 	{
-        // TODO: Creating socket error handling
+        logm(logq, FATAL, "Unable to create server socket | %s", strerror(errno));
 	}
     else
     {
-        // TODO: Reporting created socket.
+        logm(logq, DEBUG, "Created server socket: %d", serverSocket);
     }
 
 
@@ -36,10 +37,12 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
         memset(serverAddress, 0, sizeof(*serverAddress));
 
 	serverAddress->sin_family        = AF_INET;
-    serverAddress->sin_port          = serverPort;
+    serverAddress->sin_port          = htons(serverPort);
     serverAddress->sin_addr.s_addr   = serverIP;
 
-    // TODO: Report creation of address struct
+    char addressString[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(serverAddress->sin_addr.s_addr), addressString, INET_ADDRSTRLEN);
+    logm(logq, DEBUG, "Created address struct for address: %s:%d.",addressString, serverPort);
 
 
 
@@ -52,11 +55,11 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
 
     if(bindStatus == -1)
 	{
-        // TODO: Binding address error handling
+        logm(logq, FATAL, "Unable to bind address to server socket | %s", strerror(errno));
 	}
     else
     {
-        // TODO: Address binding reporting
+        logm(logq, DEBUG, "Address bound to server socket.");
     }
 
     ///Creating connection queue on the server socket
@@ -65,11 +68,15 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
 
     if(listenStatus == -1)
 	{
-        // TODO: Connection queue creation error reporting
+        logm(logq, FATAL, "Unable to listen on server socket | %s", strerror(errno));
+
 	}
     else
     {
-        // TODO: Connection queue creation reporting
+        logm(logq, INFO, "Server listening on socket: %d, bound to address: %s:%d",
+            serverSocket,
+            addressString,
+            serverPort);
     }
 
     return serverSocket;

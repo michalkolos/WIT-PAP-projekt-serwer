@@ -19,7 +19,7 @@ int main(int argc, char const *argv[]){
     logQueueInit(&logq, 6, 6, 6, 6);
  
     struct sockaddr_in serverAddress;
-    int serverSocket = startServer(0, 9000, &serverAddress);
+    int serverSocket = startServer(0, 9000, &serverAddress, &logq);
 
     ThreadPool threadPool;
     threadPollInit(&threadPool, &logq, 40, &serverSocket, &serverAddress);
