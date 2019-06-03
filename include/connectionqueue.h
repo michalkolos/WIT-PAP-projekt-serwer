@@ -33,9 +33,9 @@ struct Connection{
  * Initializes new empty job queue for incoming connections.  
  * 
  * @param queue A pointer to uninitialized ConnectionQueue object.
+ * @param newLogq A pointer to initialized LogQueue object that provides logging 
+ * functionality.
  */
-void connectionQueueInit(ConnectionQueue* queue);
-
 void connectionQueueInit(ConnectionQueue* queue, LogQueue* newLogq);
 void connectionQueuePush(ConnectionQueue* queue, int socket);
 int  connectionQueuePull(ConnectionQueue* queue);

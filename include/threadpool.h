@@ -105,10 +105,12 @@ typedef struct ThreadPool{
  * descriptors. 
  * 
  * @param threadPool Pointer to an empty ThreadPool object.
+ * @param logq Pointer to initialised LogQueue object. It provides logging 
+ * functionality to the entire threadpool.
  * @param threadNo  Number of threads that will be available in the pool from the
  * start. 
  */
-void threadPollInit(ThreadPool* threadPool, int threadNo);
+void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo);
 
 
 // TODO: Finish threadPool description
@@ -120,7 +122,6 @@ void threadPollInit(ThreadPool* threadPool, int threadNo);
  * @param threadPool 
  * @return Thread* 
  */
-void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo);
 Thread* spawnThread(ThreadPool* threadPool);
 
 /**
