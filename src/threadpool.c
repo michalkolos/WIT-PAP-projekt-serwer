@@ -136,11 +136,11 @@ void* threadFunction(void* arg){
 int getCurrentCpuNo(){
     
     errno = 0;
-    // int cpuNo = sched_getcpu();
+    int cpuNo = sched_getcpu();
 
-    int c, s;
-    s = getcpu(&c, NULL, NULL);
-    int cpuNo = (s == -1) ? s : c;
+    // int c, s;
+    // s = getcpu(&c, NULL, NULL);
+    // int cpuNo = (s == -1) ? s : c;
 
     return cpuNo;
 }
