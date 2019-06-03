@@ -76,7 +76,6 @@ typedef struct ThreadPool{
 
     pthread_mutex_t mutex;
     ConnectionQueue connectionQueue;
-    LogQueue*       logq;
 
 }ThreadPool;
 
@@ -110,7 +109,7 @@ typedef struct ThreadPool{
  * @param threadNo  Number of threads that will be available in the pool from the
  * start. 
  */
-void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo);
+void threadPollInit(ThreadPool* threadPool, int threadNo);
 
 
 // TODO: Finish threadPool description

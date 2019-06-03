@@ -17,11 +17,7 @@
 #include "log.h"
 #include "connectionqueue.h"
 
-LogQueue* logq;
-
-int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress, LogQueue* newLogq){
-
-    logq = newLogq;
+int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress){
 
     ///Creating server socket
     errno = 0;
@@ -29,11 +25,11 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress,
 
     if (serverSocket == -1)
 	{
-        logm(logq, FATAL, "Unable to create server socket | %s", strerror(errno));
+        logm(FATAL, "Unable to create server socket | %s", strerror(errno));
 	}
     else
     {
-        logm(logq, DEBUG, "Created server socket: %d", serverSocket);
+        logm(DEBUG, "Created server socket: %d", serverSocket);
     }
 
 
@@ -47,7 +43,7 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress,
 
     char addressString[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(serverAddress->sin_addr.s_addr), addressString, INET_ADDRSTRLEN);
-    logm(logq, DEBUG, "Created address struct for address: %s:%d.",addressString, serverPort);
+    logm(DEBUG, "Created address struct for address: %s:%d.",addressString, serverPort);
 
 
 
@@ -60,11 +56,11 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress,
 
     if(bindStatus == -1)
 	{
-        logm(logq, FATAL, "Unable to bind address to server socket | %s", strerror(errno));
+        logm(FATAL, "Unable to bind address to server socket | %s", strerror(errno));
 	}
     else
     {
-        logm(logq, DEBUG, "Address bound to server socket.");
+        logm(DEBUG, "Address bound to server socket.");
     }
 
     ///Creating connection queue on the server socket
@@ -73,12 +69,12 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress,
 
     if(listenStatus == -1)
 	{
-        logm(logq, FATAL, "Unable to listen on server socket | %s", strerror(errno));
+        logm(FATAL, "Unable to listen on server socket | %s", strerror(errno));
 
 	}
     else
     {
-        logm(logq, INFO, "Server listening on socket: %d, bound to address: %s:%d",
+        logm(INFO, "Server listening on socket: %d, bound to address: %s:%d",
             serverSocket,
             addressString,
             serverPort);
@@ -105,12 +101,12 @@ void serverAcceptConnection(int serverSocket, ConnectionQueue* connectionQueue){
     inet_ntop(AF_INET, &(clientAddress.sin_addr.s_addr), addressString, INET_ADDRSTRLEN);
 
     if(clientSocket == -1){
-        logm(logq, ERROR, "Unable to connect with client: %s:%d | %s",
+        logm(ERROR, "Unable to connect with client: %s:%d | %s",
             addressString,
             ntohs(clientAddress.sin_port),
             strerror(errno));
     }else{
-        logm(logq, INFO, "Accepted connection with client: %s:%d ",
+        logm(INFO, "Accepted connection with client: %s:%d ",
             addressString,
             ntohs(clientAddress.sin_port));
     }

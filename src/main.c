@@ -15,14 +15,13 @@
 
 int main(int argc, char const *argv[]){
 
-    LogQueue logq;
-    logQueueInit(&logq, DEBUG, DEBUG, DEBUG, DEBUG);
- 
+    // logQueueInit(DEBUG, DEBUG, DEBUG, DEBUG);
+
     struct sockaddr_in serverAddress;
-    int serverSocket = startServer(0, 9000, &serverAddress, &logq);
+    int serverSocket = startServer(0, 9000, &serverAddress);
 
     ThreadPool threadPool;
-    threadPollInit(&threadPool, &logq, THREAD_NO);
+    threadPollInit(&threadPool, THREAD_NO);
 
     // printThreadPool(&threadPool);
 

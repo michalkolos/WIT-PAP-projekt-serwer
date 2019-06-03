@@ -3,8 +3,6 @@
 
 #include <pthread.h>
 
-#include "log.h"
-
 
 
 typedef struct ConnectionQueue ConnectionQueue;
@@ -36,7 +34,7 @@ struct Connection{
  * @param newLogq A pointer to initialized LogQueue object that provides logging 
  * functionality.
  */
-void connectionQueueInit(ConnectionQueue* queue, LogQueue* newLogq);
+void connectionQueueInit(ConnectionQueue* queue);
 void connectionQueuePush(ConnectionQueue* queue, int socket);
 int  connectionQueuePull(ConnectionQueue* queue);
 void connectionQueueWait(ConnectionQueue* queue);

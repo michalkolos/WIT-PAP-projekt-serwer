@@ -74,6 +74,21 @@ struct LogMessage{
 
 
 
+// 8""""8                                   88   8                    
+// 8    " e     eeeee eeeee  eeeee e        88   8 eeeee eeeee  eeeee 
+// 8e     8     8  88 8   8  8   8 8        88  e8 8   8 8   8  8   " 
+// 88  ee 8e    8   8 8eee8e 8eee8 8e       "8  8  8eee8 8eee8e 8eeee 
+// 88   8 88    8   8 88   8 88  8 88        8  8  88  8 88   8    88 
+// 88eee8 88eee 8eee8 88eee8 88  8 88eee     8ee8  88  8 88   8 8ee88 
+
+// ==================================================================
+
+LogQueue* logq;
+
+
+
+
+
 // 8""""8                                                        
 // 8    8 eeeee  eeeee eeeee eeeee eeeee e    e eeeee eeee eeeee 
 // 8eeee8 8   8  8  88   8   8  88   8   8    8 8   8 8    8   " 
@@ -84,14 +99,14 @@ struct LogMessage{
 // =============================================================
 
 
-void logQueueInit(LogQueue* queue,  char consoleLevel, 
-                                    char syslogLevel, 
-                                    char fileLevel, 
-                                    char dbaseLevel);
-void logm(LogQueue* queue, int level, const char *format, ...);
+void logQueueInit(  char consoleLevel, 
+                    char syslogLevel, 
+                    char fileLevel, 
+                    char dbaseLevel);
+void logm(int level, const char *format, ...);
 void* logThreadFunction(void* arg);
-LogMessage* readFromLogQueue(LogQueue* queue);
-LogSettings getLogSettings(LogQueue* queue);
+LogMessage* readFromLogQueue();
+LogSettings getLogSettings();
 
 
 #endif

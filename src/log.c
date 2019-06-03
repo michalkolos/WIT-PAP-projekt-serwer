@@ -12,41 +12,58 @@
 #include "log.h"
  
 // unsigned long time_in_micros = 1000000 * tv.tv_sec + tv.tv_usec;
- 
+    
+    //log levels
+    const char* logLabel[] = {
+        "  [ALL]",    // 0
+        "[FATAL]",    // 1
+        "[ERROR]",    // 2
+        " [WARN]",    // 3
+        " [INFO]",    // 4
+        "[DEBUG]"     // 5
+    }; 
 
 
-void logQueueInit(LogQueue* queue,  char consoleLevel, 
-                                    char syslogLevel, 
-                                    char fileLevel, 
-                                    char dbaseLevel){
+void logQueueInit(  char consoleLevel, 
+                    char syslogLevel, 
+                    char fileLevel, 
+                    char dbaseLevel){
 
-    int status = pthread_mutex_init(&(queue->mutex), NULL);
+    logq = malloc(sizeof(LogQueue));
+
+    int status = pthread_mutex_init(&(logq->mutex), NULL);
     if(status != 0){
         // TODO: Handle mutex initialisation error.
     }
 
-    status = pthread_cond_init(&(queue->conditionVar), NULL);
+    status = pthread_cond_init(&(logq->conditionVar), NULL);
     if(status != 0){
         // TODO: Handle condition variable initialisation error.
     }
 
-    queue->settings.toConsole = consoleLevel;
-    queue->settings.toSyslog = syslogLevel;
-    queue->settings.toLogFile = fileLevel;
-    queue->settings.toDBase = dbaseLevel;
+    logq->settings.toConsole = consoleLevel;
+    logq->settings.toSyslog = syslogLevel;
+    logq->settings.toLogFile = fileLevel;
+    logq->settings.toDBase = dbaseLevel;
 
-    pthread_mutex_lock(&queue->mutex);
-    queue->tail = NULL;
-    queue->head = NULL;
-    queue->size = 0;
-    pthread_mutex_unlock(&queue->mutex);
+    pthread_mutex_lock(&logq->mutex);
+    logq->tail = NULL;
+    logq->head = NULL;
+    logq->size = 0;
+    pthread_mutex_unlock(&logq->mutex);
 
     errno = 0;
-    int createState = pthread_create (&queue->loggingThreadId, NULL, logThreadFunction, (void*)queue);
+    int createState = pthread_create (&logq->loggingThreadId, NULL, logThreadFunction, NULL);
     if(createState != 0){
         // TODO: handle thread_create errors
         perror("pthread_create:");
     }
+    printf("!\n");
+    logm(INFO, "Logging module started with log levels set to:\n\t* console  - %s\n\t* Syslog   - %s\n\t* log file - %s\n\t* database - %s\n",
+                logLabel[logq->settings.toConsole],
+                logLabel[logq->settings.toSyslog],
+                logLabel[logq->settings.toLogFile],
+                logLabel[logq->settings.toDBase]);
  
     return;
 }
@@ -54,8 +71,13 @@ void logQueueInit(LogQueue* queue,  char consoleLevel,
 
 
 
-void logm(LogQueue* queue, int level, const char *format, ...){
+void logm(int level, const char *format, ...){
 
+    if (logq == NULL){
+        logQueueInit(DEBUG, DEBUG, DEBUG, DEBUG);
+        logm(WARNING, "Log queue not initialized. Automatic initialization with log level set to DEBUG.");
+    }
+    
     struct timespec timestamp;
     timespec_get (&timestamp, TIME_UTC);
 
@@ -78,25 +100,25 @@ void logm(LogQueue* queue, int level, const char *format, ...){
 
     va_end(arg);
 
-    pthread_mutex_lock(&queue->mutex);
+    pthread_mutex_lock(&logq->mutex);
     
-    queue->size++;
+    logq->size++;
     
-    if (queue->head == NULL){
-        queue->head = message;
-        queue->tail = message;
+    if (logq->head == NULL){
+        logq->head = message;
+        logq->tail = message;
         
-        pthread_cond_signal(&queue->conditionVar);
+        pthread_cond_signal(&logq->conditionVar);
         // TODO: Log waking up one thread from thread pool.
     }else{
-        queue->tail->nextMessage = message;
-        queue->tail = message;
+        logq->tail->nextMessage = message;
+        logq->tail = message;
 
-        pthread_cond_broadcast(&queue->conditionVar);
+        pthread_cond_broadcast(&logq->conditionVar);
         // TODO: Log waking up all threads from thread pool.
     }
 
-    pthread_mutex_unlock(&queue->mutex);
+    pthread_mutex_unlock(&logq->mutex);
 
     return;
 }
@@ -104,24 +126,13 @@ void logm(LogQueue* queue, int level, const char *format, ...){
 
 void* logThreadFunction(void* arg){
 
-    LogQueue* queue = (LogQueue*) arg;
     // TODO: Additional thread initialisation.
-
-    //log levels
-    const char* logLabel[] = {
-        "  [ALL]",    // 0
-        "[FATAL]",    // 1
-        "[ERROR]",    // 2
-        " [WARN]",    // 3
-        " [INFO]",    // 4
-        "[DEBUG]"     // 5
-    };
 
     LogMessage* incomingLog;
     LogSettings settings;
     while(1){
-        incomingLog = readFromLogQueue(queue);
-        settings = getLogSettings(queue);
+        incomingLog = readFromLogQueue();
+        settings = getLogSettings();
 
         if(incomingLog->level <= settings.toConsole){
 
@@ -158,41 +169,48 @@ void* logThreadFunction(void* arg){
 
 
 
-LogMessage* readFromLogQueue(LogQueue* queue){
+LogMessage* readFromLogQueue(){
+
+
 
     LogMessage* returnMessage = NULL;
 
-    pthread_mutex_lock(&queue->mutex);
+    pthread_mutex_lock(&logq->mutex);
 
-        while (queue->size == 0) {
-		pthread_cond_wait(&queue->conditionVar, &queue->mutex);
+        while (logq->size == 0) {
+		pthread_cond_wait(&logq->conditionVar, &logq->mutex);
 	}
 
-    if(queue->head != NULL){
-        LogMessage* oldHead = queue->head;
-        queue->head = queue->head->nextMessage;
+    if(logq->head != NULL){
+        LogMessage* oldHead = logq->head;
+        logq->head = logq->head->nextMessage;
 
         returnMessage = oldHead;
-        queue->size--;
+        logq->size--;
     }
     
-    if(queue->size == 0){
-        queue->head = NULL;
-        queue->tail = NULL;
+    if(logq->size == 0){
+        logq->head = NULL;
+        logq->tail = NULL;
     }
 
-    pthread_mutex_unlock(&queue->mutex);
+    pthread_mutex_unlock(&logq->mutex);
 
     return returnMessage;
 }
 
-LogSettings getLogSettings(LogQueue* queue){
+LogSettings getLogSettings(){
 
-    pthread_mutex_lock(&queue->mutex);
+    if (logq == NULL){
+        logQueueInit(DEBUG, DEBUG, DEBUG, DEBUG);
+        logm(WARNING, "Log queue not initialized. Automatic initialization with log level set to DEBUG.");
+    }
 
-    LogSettings settings = queue->settings;
+    pthread_mutex_lock(&logq->mutex);
 
-    pthread_mutex_unlock(&queue->mutex);
+    LogSettings settings = logq->settings;
+
+    pthread_mutex_unlock(&logq->mutex);
 
     return settings;
 }

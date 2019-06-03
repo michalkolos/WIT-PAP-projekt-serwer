@@ -21,18 +21,16 @@
 // TODO: Add capability for creating and destroying additional threads. 
 
 
-void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo){
-
-    threadPool->logq = logq;
+void threadPollInit(ThreadPool* threadPool, int threadNo){
 
     threadPool->workingThreadsCount = 0;
     threadPool->threadCount = 0;
 
-    connectionQueueInit(&threadPool->connectionQueue, logq);
+    connectionQueueInit(&threadPool->connectionQueue);
 
     threadPool->threadListHead = spawnThread(threadPool);
     if(threadPool->threadListHead == NULL){
-        logm(logq, FATAL, "Error creating worker thread pool.");
+        logm(FATAL, "Error creating worker thread pool.");
         exit(EXIT_FAILURE);
     }
 
@@ -43,16 +41,16 @@ void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo){
     }
 
     if(threadPool->threadCount <= 0){
-        logm(logq, FATAL, "Error creating worker thread pool.");
+        logm(FATAL, "Error creating worker thread pool.");
         exit(EXIT_FAILURE);
     }
     if(threadPool->threadCount != threadNo){
-        logm(logq, WARNING, "Amount of created worker threads different than ordered: %d.", 
+        logm(WARNING, "Amount of created worker threads different than ordered: %d.", 
             threadPool->threadCount);
     }
 
     if(threadPool->threadCount == threadNo){
-        logm(logq, INFO, "Created worker thread pool of %d threads.", 
+        logm(INFO, "Created worker thread pool of %d threads.", 
             threadPool->threadCount);
     }
 
@@ -61,12 +59,11 @@ void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo){
 
 // TODO: Modify spawnThread function so it will put them directly into ThreadPool object instead returning it.
 Thread* spawnThread(ThreadPool* threadPool){
-    LogQueue* logq = threadPool->logq;
 
     Thread* thread = malloc(sizeof(Thread));
 
     if(thread == NULL){
-        logm(logq, FATAL, "Error creating worker thread struct.");
+        logm(FATAL, "Error creating worker thread struct.");
         exit(EXIT_FAILURE);
     }
 
@@ -77,12 +74,12 @@ Thread* spawnThread(ThreadPool* threadPool){
     errno = 0;
     int createState = pthread_create (&thread->id, NULL, threadFunction, (void*)thread);
     if(createState != 0){
-        logm(logq, ERROR, "Error spawning thread | %s", strerror(errno));
+        logm(ERROR, "Error spawning thread | %s", strerror(errno));
         free(thread);
         return NULL;
     }
 
-    logm(logq, DEBUG, "Spawned thread %ld.", thread->id);
+    logm(DEBUG, "Spawned thread %ld.", thread->id);
     
     threadPool->threadCount++;
     return thread;
@@ -95,26 +92,25 @@ void* threadFunction(void* arg){
     Thread* threadStruct = (Thread*) arg;
 
     ConnectionQueue* connectionQueue = &threadStruct->threadPoolPointer->connectionQueue;
-    LogQueue* logq = threadStruct->threadPoolPointer->logq; 
     
     threadStruct->state = THREAD_STATE_INIT;
     
     /// Checking id of the CPU that is running the thread
     threadStruct->cpu = getCurrentCpuNo();
     if(threadStruct->cpu == -1){
-        logm(logq, ERROR, "Error reading CPU id | %s", strerror(errno));
+        logm(ERROR, "Error reading CPU id | %s", strerror(errno));
     }
 
     /// Geting TID of the thread
     errno = 0;
     threadStruct->altId = syscall(__NR_gettid);
     if(threadStruct->altId == -1){
-        logm(logq, ERROR, "Error reading thread TID | %s", strerror(errno));
+        logm(ERROR, "Error reading thread TID | %s", strerror(errno));
     }
 
     int incomingConnection = 0;
     
-    logm(logq, DEBUG, "%s", "Worker thread ready.");
+    logm(DEBUG, "%s", "Worker thread ready.");
 
     /// Thread's main loop
     int totalBytesFromConnection;
@@ -125,7 +121,7 @@ void* threadFunction(void* arg){
         char buffer[BUFFER_LEN];
         totalBytesFromConnection = readFromSocket(incomingConnection, buffer, BUFFER_LEN);       
 
-        logm(logq, INFO, "Connection ended. Total received bytes: %d", 
+        logm(INFO, "Connection ended. Total received bytes: %d", 
             totalBytesFromConnection);
     }
 
