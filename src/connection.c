@@ -3,53 +3,27 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#define BUFFER_LEN 1024
+#include "connection.h"
 
 
 
 
-void readFromSocket(int socket, char* buffer, int size){
 
+int readFromSocket(int socket, char* buffer, int size){
+
+    int totalBytesRead = 0;
     int bytesRead = 0;
+    
     errno = 0;
     while ( (bytesRead = read(socket, buffer, size - 1)) > 0)
     {
+        totalBytesRead += bytesRead;
         buffer[bytesRead] = 0;
         printf("%s", buffer);
     }
 
-    // if(in == -1)
-    // {
-        
-    // }
-    // else
-    // {
-    //     char valString[DEFAULT_STRING_LEN];
-    //     snprintf(valString, DEFAULT_STRING_LEN * 2, "Recieved %d bytes", messageSize); 
-    //     logMsg(INFO, valString);
-    // }
-     
-    // for (int i = 0; i < messageLen; ++i)
-    // {
-    //      message[i] = ntohs(message[i]);
-    // }
-
     printf("\n");
 
-    return;
+    return totalBytesRead;
 }
 
-char switchBoard(char* buffer, int size){
-
-
-
-}
-
-
-
-// "data":{[
-//     {   "table1": ["col01":{"name", "type"},
-//                 "col02":{"name", "type"}]
-//         "table2": ["col01":{"name", "type"},
-//                 "col02":{"name", "type"}]
-//     ] }

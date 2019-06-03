@@ -14,6 +14,7 @@
 
 #include "connectionqueue.h"
 #include "threadpool.h"
+#include "connection.h"
 #include "log.h"
 
 
@@ -116,13 +117,16 @@ void* threadFunction(void* arg){
     logm(logq, DEBUG, "%s", "Worker thread ready.");
 
     /// Thread's main loop
+    int totalBytesFromConnection;
     while(1){
+        totalBytesFromConnection = 0;
         incomingConnection = connectionQueuePull(connectionQueue);
-            
-            printf("Thread: %d on CPU: %d recieved: %d\n", 
-                threadStruct->altId,
-                threadStruct->cpu,
-                incomingConnection);
+
+        char buffer[BUFFER_LEN];
+        totalBytesFromConnection = readFromSocket(incomingConnection, buffer, BUFFER_LEN);       
+
+        logm(logq, INFO, "Connection ended. Total received bytes: %d", 
+            totalBytesFromConnection);
     }
 
     return arg;
