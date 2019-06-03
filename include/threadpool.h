@@ -2,7 +2,9 @@
 #define THREADPOOL_H
 
 #include <netinet/in.h>
+
 #include "connectionqueue.h"
+#include "log.h"
 
 
 // 8""8""8                               
@@ -74,6 +76,7 @@ typedef struct ThreadPool{
 
     pthread_mutex_t mutex;
     ConnectionQueue connectionQueue;
+    LogQueue*       logq;
 
 }ThreadPool;
 
@@ -117,6 +120,7 @@ void threadPollInit(ThreadPool* threadPool, int threadNo);
  * @param threadPool 
  * @return Thread* 
  */
+void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo);
 Thread* spawnThread(ThreadPool* threadPool);
 
 /**

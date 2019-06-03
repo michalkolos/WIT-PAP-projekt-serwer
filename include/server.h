@@ -3,7 +3,9 @@
 
 #include <netinet/in.h>
 
-int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress);
-int acceptConnection(int socket, struct sockaddr_in* clientAddress);
+#include "log.h"
+
+int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress, LogQueue* NewLogq);
+void serverAcceptConnection(int serverSocket, ConnectionQueue* connectionQueue);
 
 #endif

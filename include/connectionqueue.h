@@ -3,6 +3,8 @@
 
 #include <pthread.h>
 
+#include "log.h"
+
 
 
 typedef struct ConnectionQueue ConnectionQueue;
@@ -34,12 +36,7 @@ struct Connection{
  */
 void connectionQueueInit(ConnectionQueue* queue);
 
-/**
- * @brief 
- * 
- * @param queue 
- * @param socket 
- */
+void connectionQueueInit(ConnectionQueue* queue, LogQueue* newLogq);
 void connectionQueuePush(ConnectionQueue* queue, int socket);
 int  connectionQueuePull(ConnectionQueue* queue);
 void connectionQueueWait(ConnectionQueue* queue);

@@ -14,8 +14,14 @@
 #include <sys/stat.h>
 #include <syslog.h>
 
+#include "log.h"
+#include "connectionqueue.h"
 
-int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress){
+LogQueue* logq;
+
+int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress, LogQueue* newLogq){
+
+    logq = newLogq;
 
     ///Creating server socket
     errno = 0;
@@ -23,13 +29,11 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
 
     if (serverSocket == -1)
 	{
-        // TODO: Creating socket error handling
-        printf("Error socket\n");
+        logm(logq, FATAL, "Unable to create server socket | %s", strerror(errno));
 	}
     else
     {
-        // TODO: Reporting created socket.
-        printf("Socket ok\n");
+        logm(logq, DEBUG, "Created server socket: %d", serverSocket);
     }
 
 
@@ -41,7 +45,9 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
     serverAddress->sin_port          = htons(serverPort);
     serverAddress->sin_addr.s_addr   = serverIP;
 
-    // TODO: Report creation of address struct
+    char addressString[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(serverAddress->sin_addr.s_addr), addressString, INET_ADDRSTRLEN);
+    logm(logq, DEBUG, "Created address struct for address: %s:%d.",addressString, serverPort);
 
 
 
@@ -54,13 +60,11 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
 
     if(bindStatus == -1)
 	{
-        // TODO: Binding address error handling
-        printf("Error bind\n");
+        logm(logq, FATAL, "Unable to bind address to server socket | %s", strerror(errno));
 	}
     else
     {
-        // TODO: Address binding reporting
-        printf("Bind ok\n");
+        logm(logq, DEBUG, "Address bound to server socket.");
     }
 
     ///Creating connection queue on the server socket
@@ -69,30 +73,51 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
 
     if(listenStatus == -1)
 	{
-        // TODO: Connection queue creation error reporting
-        printf("Error listen\n");
+        logm(logq, FATAL, "Unable to listen on server socket | %s", strerror(errno));
+
 	}
     else
     {
-        // TODO: Connection queue creation reporting
-        printf("Listen ok\n");
+        logm(logq, INFO, "Server listening on socket: %d, bound to address: %s:%d",
+            serverSocket,
+            addressString,
+            serverPort);
     }
 
     return serverSocket;
 }
 
 
-int acceptConnection(int socket, struct sockaddr_in* clientAddress){
 
+
+void serverAcceptConnection(int serverSocket, ConnectionQueue* connectionQueue){
     int clientSocket;
-    socklen_t sizeOfClientAddress = sizeof(clientAddress);
     
+    struct sockaddr_in clientAddress;
+    memset(&clientAddress, 0, sizeof(clientAddress));
+
+    socklen_t sizeOfClientAddress = sizeof(clientAddress);
+
     errno = 0;
-    clientSocket =  accept(socket, (struct sockaddr *) clientAddress, &sizeOfClientAddress);
- 
-    if (clientSocket == -1){
-        // TODO: Handle server accept errors.
+    clientSocket =  accept(serverSocket, (struct sockaddr *) &clientAddress, &sizeOfClientAddress);
+
+    char addressString[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(clientAddress.sin_addr.s_addr), addressString, INET_ADDRSTRLEN);
+
+    if(clientSocket == -1){
+        logm(logq, ERROR, "Unable to connect with client: %s:%d | %s",
+            addressString,
+            ntohs(clientAddress.sin_port),
+            strerror(errno));
+    }else{
+        logm(logq, INFO, "Accepted connection with client: %s:%d ",
+            addressString,
+            ntohs(clientAddress.sin_port));
     }
 
-    return clientSocket;
+    connectionQueuePush(connectionQueue, clientSocket);
+
+    return;
 }
+
+ 

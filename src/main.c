@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
+// #include <stdlib.h>
 
 #include "threadpool.h"
 #include "server.h"
 #include "connectionqueue.h"
-
+#include "log.h"
 
 #define THREAD_NO 20
 
@@ -13,33 +14,23 @@
 
 
 int main(int argc, char const *argv[]){
-    
-    ThreadPool threadPool;
-    threadPollInit(&threadPool, THREAD_NO);
-    // printThreadPool(&threadPool);
-    
+
+    LogQueue logq;
+    logQueueInit(&logq, DEBUG, DEBUG, DEBUG, DEBUG);
+ 
     struct sockaddr_in serverAddress;
-    int serverSocket = startServer(INADDR_ANY, 9000, &serverAddress);
+    int serverSocket = startServer(0, 9000, &serverAddress, &logq);
 
-    int connectionSocket = 0;
+    ThreadPool threadPool;
+    threadPollInit(&threadPool, &logq, THREAD_NO);
+
+    // printThreadPool(&threadPool);
+
     while(1){
-
-        connectionSocket = acceptConnection(serverSocket,&serverAddress);
-        connectionQueuePush(&threadPool.connectionQueue, connectionSocket);
+        serverAcceptConnection(serverSocket, &(threadPool.connectionQueue));
     }
-
-    // for (int i = 0; i < 1000000; i++)
-    // {
-    //     connectionQueuePush(&threadPool.connectionQueue, i);
-    // }
-    
-    // sleep(10);
-
-    // printf("\n\n");
-    // connectionQueuePrint(&threadPool.connectionQueue);
-    // while(1){
-
-    // }
 
     return 0;
 }
+
+

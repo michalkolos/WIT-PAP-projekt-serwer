@@ -8,27 +8,32 @@
 #include <sys/prctl.h>
 #include <malloc.h>
 #include <sched.h>
-#include <sys/sysinfo.h>
-#include <sys/types.h>
 #include <sys/syscall.h>
 #include <sys/socket.h>
+#include <string.h>
 
 #include "connectionqueue.h"
 #include "threadpool.h"
-#include "connection.h"
+#include "log.h"
 
 
 // TODO: Add capability for creating and destroying additional threads. 
 
 
-void threadPollInit(ThreadPool* threadPool, int threadNo){
+void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo){
+
+    threadPool->logq = logq;
 
     threadPool->workingThreadsCount = 0;
     threadPool->threadCount = 0;
 
-    connectionQueueInit(&threadPool->connectionQueue);
+    connectionQueueInit(&threadPool->connectionQueue, logq);
 
     threadPool->threadListHead = spawnThread(threadPool);
+    if(threadPool->threadListHead == NULL){
+        logm(logq, FATAL, "Error creating worker thread pool.");
+        exit(EXIT_FAILURE);
+    }
 
     Thread* newThread = threadPool->threadListHead;
     for(int i = 0; i < threadNo -1; i++){
@@ -36,16 +41,32 @@ void threadPollInit(ThreadPool* threadPool, int threadNo){
         newThread = newThread->nextThread;
     }
 
+    if(threadPool->threadCount <= 0){
+        logm(logq, FATAL, "Error creating worker thread pool.");
+        exit(EXIT_FAILURE);
+    }
+    if(threadPool->threadCount != threadNo){
+        logm(logq, WARNING, "Amount of created worker threads different than ordered: %d.", 
+            threadPool->threadCount);
+    }
+
+    if(threadPool->threadCount == threadNo){
+        logm(logq, INFO, "Created worker thread pool of %d threads.", 
+            threadPool->threadCount);
+    }
+
     return;
 }
 
 // TODO: Modify spawnThread function so it will put them directly into ThreadPool object instead returning it.
 Thread* spawnThread(ThreadPool* threadPool){
+    LogQueue* logq = threadPool->logq;
 
     Thread* thread = malloc(sizeof(Thread));
 
     if(thread == NULL){
-        // TODO: thread list struct creation error handling.
+        logm(logq, FATAL, "Error creating worker thread struct.");
+        exit(EXIT_FAILURE);
     }
 
     thread->nextThread = NULL;
@@ -55,11 +76,12 @@ Thread* spawnThread(ThreadPool* threadPool){
     errno = 0;
     int createState = pthread_create (&thread->id, NULL, threadFunction, (void*)thread);
     if(createState != 0){
-        // TODO: handle thread_create errors
-        perror("pthread_create:");
+        logm(logq, ERROR, "Error spawning thread | %s", strerror(errno));
+        free(thread);
+        return NULL;
     }
 
-    printf("Spawned thread %ld\n", thread->id);
+    logm(logq, DEBUG, "Spawned thread %ld.", thread->id);
     
     threadPool->threadCount++;
     return thread;
@@ -70,27 +92,37 @@ void* threadFunction(void* arg){
     
     /// Initialising thread
     Thread* threadStruct = (Thread*) arg;
-    threadStruct->state = THREAD_STATE_INIT;
-    threadStruct->cpu = getCurrentCpuNo();
-    threadStruct->altId = syscall(__NR_gettid);
-    
+
     ConnectionQueue* connectionQueue = &threadStruct->threadPoolPointer->connectionQueue;
+    LogQueue* logq = threadStruct->threadPoolPointer->logq; 
+    
+    threadStruct->state = THREAD_STATE_INIT;
+    
+    /// Checking id of the CPU that is running the thread
+    threadStruct->cpu = getCurrentCpuNo();
+    if(threadStruct->cpu == -1){
+        logm(logq, ERROR, "Error reading CPU id | %s", strerror(errno));
+    }
+
+    /// Geting TID of the thread
+    errno = 0;
+    threadStruct->altId = syscall(__NR_gettid);
+    if(threadStruct->altId == -1){
+        logm(logq, ERROR, "Error reading thread TID | %s", strerror(errno));
+    }
 
     int incomingConnection = 0;
     
-    
+    logm(logq, DEBUG, "%s", "Worker thread ready.");
+
     /// Thread's main loop
     while(1){
         incomingConnection = connectionQueuePull(connectionQueue);
             
-        printf("Thread: %d on CPU: %d from socket: %d received:\n", 
-            threadStruct->altId,
-            threadStruct->cpu,
-            incomingConnection);
-        
-        char buffer[512];
-
-        readFromSocket(incomingConnection, buffer, 512);
+            printf("Thread: %d on CPU: %d recieved: %d\n", 
+                threadStruct->altId,
+                threadStruct->cpu,
+                incomingConnection);
     }
 
     return arg;
@@ -105,10 +137,6 @@ int getCurrentCpuNo(){
     int c, s;
     s = getcpu(&c, NULL, NULL);
     int cpuNo = (s == -1) ? s : c;
-
-    if(cpuNo == -1){
-        // TODO: getcpu error handling
-    }
 
     return cpuNo;
 }
