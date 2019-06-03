@@ -15,7 +15,7 @@
 
 int main(int argc, char const *argv[]){
 
-    // logQueueInit(DEBUG, DEBUG, DEBUG, DEBUG);
+    logQueueInit(DEBUG, DEBUG, DEBUG, DEBUG);
 
     struct sockaddr_in serverAddress;
     int serverSocket = startServer(0, 9000, &serverAddress);
