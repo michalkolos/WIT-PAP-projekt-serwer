@@ -72,9 +72,6 @@ typedef struct ThreadPool{
     Thread* threadListHead;
     int     threadCount;
     int     workingThreadsCount;
-    
-    struct  sockaddr_in* serverAddress;
-    int*    serverSocket;
 
     pthread_mutex_t mutex;
     ConnectionQueue connectionQueue;
@@ -93,7 +90,7 @@ typedef struct ThreadPool{
                                                               
 // =============================================================
 
-void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo, int* socket, struct sockaddr_in* address);
+void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo);
 Thread* spawnThread(ThreadPool* threadPool);
 void* threadFunction(void* arg);
 int getCurrentCpuNo();

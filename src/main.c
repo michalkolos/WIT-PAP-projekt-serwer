@@ -22,7 +22,7 @@ int main(int argc, char const *argv[]){
     int serverSocket = startServer(0, 9000, &serverAddress, &logq);
 
     ThreadPool threadPool;
-    threadPollInit(&threadPool, &logq, THREAD_NO, &serverSocket, &serverAddress);
+    threadPollInit(&threadPool, &logq, THREAD_NO);
 
     // printThreadPool(&threadPool);
 

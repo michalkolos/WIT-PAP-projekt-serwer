@@ -19,11 +19,8 @@
 
 
 
-void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo, int* socket, struct sockaddr_in* address){
+void threadPollInit(ThreadPool* threadPool, LogQueue* logq, int threadNo){
 
-    threadPool->serverSocket = socket;
-    threadPool->serverAddress = address;
-    
     threadPool->logq = logq;
 
     threadPool->workingThreadsCount = 0;
