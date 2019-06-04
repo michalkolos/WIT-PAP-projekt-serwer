@@ -118,11 +118,13 @@ void* threadFunction(void* arg){
         totalBytesFromConnection = 0;
         incomingConnection = connectionQueuePull(connectionQueue);
 
-        char buffer[BUFFER_LEN];
-        totalBytesFromConnection = readFromSocket(incomingConnection, buffer, BUFFER_LEN);       
 
-        logm(INFO, "Connection ended. Total received bytes: %d", 
-            totalBytesFromConnection);
+        connectionHandler(incomingConnection);
+        // char buffer[BUFFER_LEN];
+        // totalBytesFromConnection = readFromSocket(incomingConnection, buffer, BUFFER_LEN);       
+
+        // logm(INFO, "Connection ended. Total received bytes: %d", 
+            // totalBytesFromConnection);
     }
 
     return arg;

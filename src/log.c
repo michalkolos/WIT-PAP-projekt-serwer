@@ -15,7 +15,7 @@
     
     //log levels
     const char* logLabel[] = {
-        "  [ALL]",    // 0
+        "  [OFF]",    // 0
         "[FATAL]",    // 1
         "[ERROR]",    // 2
         " [WARN]",    // 3
