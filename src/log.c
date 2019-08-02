@@ -58,7 +58,7 @@ void logQueueInit(  char consoleLevel,
         // TODO: handle thread_create errors
         perror("pthread_create:");
     }
-    printf("!\n");
+    
     logm(INFO, "Logging module started with log levels set to:\n\t* console  - %s\n\t* Syslog   - %s\n\t* log file - %s\n\t* database - %s\n",
                 logLabel[logq->settings.toConsole],
                 logLabel[logq->settings.toSyslog],

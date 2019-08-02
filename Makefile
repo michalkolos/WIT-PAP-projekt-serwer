@@ -12,7 +12,7 @@ OBJECTS  = $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SOURCES))
 
 
 all: $(OBJECTS)
-	$(CC) $^ -o  $(BIN)/$(EXECUTABLE) -lpthread 
+	$(CC) $^ -o  $(BIN)/$(EXECUTABLE) -lpthread
 
 $(OBJ)/%.o: $(SRC)/%.c
 	$(CC) -I$(INCLUDE)/ -c $< -o $@ 

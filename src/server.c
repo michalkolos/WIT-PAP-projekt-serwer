@@ -26,6 +26,7 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
     if (serverSocket == -1)
 	{
         logm(FATAL, "Unable to create server socket | %s", strerror(errno));
+        exit(EXIT_FAILURE);
 	}
     else
     {
@@ -57,6 +58,7 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
     if(bindStatus == -1)
 	{
         logm(FATAL, "Unable to bind address to server socket | %s", strerror(errno));
+        exit(EXIT_FAILURE);
 	}
     else
     {
@@ -70,6 +72,7 @@ int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress)
     if(listenStatus == -1)
 	{
         logm(FATAL, "Unable to listen on server socket | %s", strerror(errno));
+        exit(EXIT_FAILURE);
 
 	}
     else
@@ -105,6 +108,9 @@ void serverAcceptConnection(int serverSocket, ConnectionQueue* connectionQueue){
             addressString,
             ntohs(clientAddress.sin_port),
             strerror(errno));
+
+            // TODO: Handle accept errors.
+
     }else{
         logm(INFO, "Accepted connection with client: %s:%d ",
             addressString,

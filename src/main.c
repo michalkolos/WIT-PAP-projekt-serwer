@@ -7,6 +7,7 @@
 #include "server.h"
 #include "connectionqueue.h"
 #include "log.h"
+#include "messagehandlers.h"
 
 #define THREAD_NO 20
 
@@ -16,6 +17,7 @@
 int main(int argc, char const *argv[]){
 
     logQueueInit(DEBUG, DEBUG, DEBUG, DEBUG);
+    messageHandlersInit();
 
     struct sockaddr_in serverAddress;
     int serverSocket = startServer(0, 9000, &serverAddress);

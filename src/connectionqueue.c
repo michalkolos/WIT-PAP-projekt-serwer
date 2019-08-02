@@ -5,7 +5,7 @@
 #include "connectionqueue.h"
 #include "log.h"
 
-
+// TODO: Initialize connection queue dynamically.
 void connectionQueueInit(ConnectionQueue* queue){
     
     int status = pthread_mutex_init(&(queue->mutex), NULL);

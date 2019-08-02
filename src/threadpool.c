@@ -61,7 +61,6 @@ void threadPollInit(ThreadPool* threadPool, int threadNo){
 Thread* spawnThread(ThreadPool* threadPool){
 
     Thread* thread = malloc(sizeof(Thread));
-
     if(thread == NULL){
         logm(FATAL, "Error creating worker thread struct.");
         exit(EXIT_FAILURE);
@@ -110,7 +109,7 @@ void* threadFunction(void* arg){
 
     int incomingConnection = 0;
     
-    logm(DEBUG, "%s", "Worker thread ready.");
+    logm(DEBUG, "Worker thread ready.");
 
     /// Thread's main loop
     int totalBytesFromConnection;
@@ -118,13 +117,11 @@ void* threadFunction(void* arg){
         totalBytesFromConnection = 0;
         incomingConnection = connectionQueuePull(connectionQueue);
 
+        Message message;
 
-        connectionHandler(incomingConnection);
-        // char buffer[BUFFER_LEN];
-        // totalBytesFromConnection = readFromSocket(incomingConnection, buffer, BUFFER_LEN);       
-
-        // logm(INFO, "Connection ended. Total received bytes: %d", 
-            // totalBytesFromConnection);
+        messageInit(incomingConnection, &message);
+        readMessageFromSocket(&message);
+        messageFinish(&message);
     }
 
     return arg;
