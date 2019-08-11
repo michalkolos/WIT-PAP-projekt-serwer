@@ -9,7 +9,7 @@
 #include "log.h"
 #include "messagehandlers.h"
 
-#define THREAD_NO 20
+#define THREAD_NO 5
 
 
 

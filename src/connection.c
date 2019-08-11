@@ -11,7 +11,15 @@
 #include "messagehandlers.h"
 #include "log.h"
 
+uint32_t readIntFromSocket(int socket){
+    uint32_t inInt;
 
+    //TODO: read error handling
+    read(socket, &inInt, sizeof(uint32_t));
+    inInt = ntohl(inInt);
+
+    return inInt;
+}
 
 
 void messageInit(int socket, Message* message){
@@ -22,7 +30,9 @@ void messageInit(int socket, Message* message){
     message->bytesSent = 0;
     message->dataSize = 0;
     message->crc = 0;
-    message->protocolId = 0;
+    message->messageId = 0;
+
+
 
     logm(DEBUG, "Created new message struct for incoming message [socket: %d]",
         message->readSocket);
@@ -32,25 +42,20 @@ void messageInit(int socket, Message* message){
 
 void readMessageFromSocket(Message* message){
 
-    if(message == NULL){
+    message->messageId = readIntFromSocket(message->readSocket);
+    message->clientId = readIntFromSocket(message->readSocket);
+    message->messageLen = readIntFromSocket(message->readSocket);
 
-        logm(ERROR, "Message struct not initialized.");
-        // TODO: Handle uninitialized message struct error.
-    }
+    message->body = malloc(message->messageLen * sizeof(uint8_t));
     
-    errno = 0;
-    int bytesRead = read(message->readSocket, &message->protocolId, sizeof(uint8_t));
+    //TODO:read error handling
+    read(message->readSocket, message->body, message->messageLen);
 
-    if(bytesRead == -1){
-        logm(ERROR, "Unable to read message type: %s", strerror(errno));
-        message->error = READ_TYPE_ERROR;
-        return;
-    }
-
-    logm(DEBUG, "Determined that incoming message is labeled as: %d", 
-        (int)message->protocolId);
-
-    runHandler(message);
+    logm(DEBUG, "Received message:\n\t* messageID: %d\n\t* clientID: %d\n\t* message Length: %d\n\t%s\n",
+        message->messageId,
+        message->clientId,
+        message->messageLen,
+        message->body);
 
     return;
 }
@@ -59,7 +64,7 @@ void messageFinish(Message* message){
 
     if(message->error == 0){
         logm(INFO, "Handled connection:\n \tprotocol: %d\n\t* client: %d\n\t* data received: %dB\n\t* data sent: %dB",
-            message->protocolId,
+            message->messageId,
             message->clientId,
             message->bytesReceived,
             message->bytesSent);

@@ -24,12 +24,13 @@ struct Message{
     int         readSocket;
     int         error;
 
-    uint8_t     protocolId;
-    int         clientId;
+    uint32_t    messageId;
+    uint32_t    clientId;
+    uint32_t    messageLen;
     int         crc;            // TODO: Implement CRC for incoming messages.
     
     int         dataSize;
-    uint8_t*    data;
+    uint8_t*    body;
     
     int         bytesReceived;
     int         bytesSent;

@@ -119,9 +119,16 @@ void* threadFunction(void* arg){
 
         Message message;
 
+        // char messageBuffer[200];
+
+        // read(incomingConnection, messageBuffer, 200);
+        // messageBuffer[199] = '\n';
+        
+        // printf("%s \n\n", messageBuffer + 12);
+        
         messageInit(incomingConnection, &message);
         readMessageFromSocket(&message);
-        messageFinish(&message);
+        // messageFinish(&message);
     }
 
     return arg;
