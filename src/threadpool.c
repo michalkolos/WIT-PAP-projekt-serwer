@@ -111,22 +111,18 @@ void* threadFunction(void* arg){
     
     logm(DEBUG, "Worker thread ready.");
 
+    
+    
     /// Thread's main loop
     int totalBytesFromConnection;
+    
     while(1){
         totalBytesFromConnection = 0;
-        incomingConnection = connectionQueuePull(connectionQueue);
+        // incomingConnection = connectionQueuePull(connectionQueue);
 
         Message message;
+        message.readSocket = connectionQueuePull(connectionQueue);
 
-        // char messageBuffer[200];
-
-        // read(incomingConnection, messageBuffer, 200);
-        // messageBuffer[199] = '\n';
-        
-        // printf("%s \n\n", messageBuffer + 12);
-        
-        messageInit(incomingConnection, &message);
         readMessageFromSocket(&message);
         // messageFinish(&message);
     }

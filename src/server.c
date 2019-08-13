@@ -17,6 +17,8 @@
 #include "log.h"
 #include "connectionqueue.h"
 
+//TODO: BUG: Closed port does not trigger an error message.
+
 int startServer(int serverIP, int serverPort, struct sockaddr_in* serverAddress){
 
     ///Creating server socket

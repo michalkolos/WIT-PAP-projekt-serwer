@@ -36,12 +36,12 @@ void messageHandlersInit(){
         messageHandlers->handlerState[i] = 0;
     } 
 
-    addHandler(testMessageHandler, '1', "test");
+    addHandler(testMessageHandler, 1, "test");
 
     char logMessage[LOG_MESSAGE_LEN];
     char concatMessage[LOG_MESSAGE_LEN];
     snprintf(logMessage, LOG_MESSAGE_LEN, 
-        "Initialised message handler table. Server can accept messages:\n");
+        "Initialised message handler table. Server accepts following messages:\n");
 
     for (int i = 1; i < MESSAGE_HANDLER_NO; i++){
         if(messageHandlers->handlerState[i] == 1){
@@ -68,7 +68,7 @@ void messageHandlersInit(){
 
 void runHandler(Message* message){
 
-    return (messageHandlers->pointers[message->protocolId])(message);
+    return (messageHandlers->pointers[message->messageId])(message);
 }
 
 
@@ -90,87 +90,17 @@ void addHandler(void (*handlerPointer) (Message* message), int position, char* n
 
 
 
-
-
-
-int readFromSocket(int socket, char* buffer, int size){
-
-    int totalBytesRead = 0;
-    int bytesRead = 0;
-    
-    errno = 0;
-    while ( (bytesRead = read(socket, buffer, size - 1)) > 0){
-
-        totalBytesRead += bytesRead;
-        buffer[bytesRead] = 0;
-        printf("%s", buffer);
-    }
-
-    // TODO: Read from socket error handling.
-
-    printf("\n");
-
-    return totalBytesRead;
-}
-
-void setHeaderField(int field,uint8_t* buffer, int* offset, int errorField){
-
-    uint32_t value;
-    memcpy(&value, buffer + *offset, sizeof(uint32_t));
-
-    *offset += sizeof(uint32_t);
-
-    field = ntohl(value);
-
-    if(field == 0 ){
-        errorField = IN_HEADER_ERROR;
-    }
-
-    return;
-}
-
-void readMessageHeader(Message* message){
-    int bytesRead = 0;
-    int offset = 0;
-    uint8_t buffer[MAX_HEADER_LEN];
-
-    errno = 0;
-    bytesRead = read(message->readSocket, buffer, MAX_HEADER_LEN);
-    if(bytesRead == 0){
-        logm(ERROR, "Error reading header from socket: %s", strerror(errno));
-        message->error = READ_ERROR;
-    }
-
-    setHeaderField(message->clientId, buffer, &offset, message->error);
-    setHeaderField(message->dataSize, buffer, &offset, message->error);
-
-    return;
-}
-
-void readMessageString(Message* message){
-    int bytesRead = 0;
-
-    message->data = malloc(sizeof(uint8_t) * message->dataSize);
-    if(message->data == NULL){
-        logm(FATAL, "Error allocating memory for incoming data.");
-        exit(EXIT_FAILURE);
-    }
-
-    errno = 0;
-    bytesRead = read(message->readSocket, message->data, message->dataSize);
-    if(bytesRead == 0 && errno != 0){
-        logm(ERROR, "Error reading data from socket: %s", strerror(errno));
-        message->error = READ_ERROR;
-    }    
-
-    if(message->data[message->dataSize - 1] != '\0'){
-        message->error = IN_DATA_ERROR;
-    }
-
-    message->bytesReceived += bytesRead;
-
-    return;
-}
+//  /$$   /$$                           /$$ /$$                              
+// | $$  | $$                          | $$| $$                              
+// | $$  | $$  /$$$$$$  /$$$$$$$   /$$$$$$$| $$  /$$$$$$   /$$$$$$   /$$$$$$$
+// | $$$$$$$$ |____  $$| $$__  $$ /$$__  $$| $$ /$$__  $$ /$$__  $$ /$$_____/
+// | $$__  $$  /$$$$$$$| $$  \ $$| $$  | $$| $$| $$$$$$$$| $$  \__/|  $$$$$$ 
+// | $$  | $$ /$$__  $$| $$  | $$| $$  | $$| $$| $$_____/| $$       \____  $$
+// | $$  | $$|  $$$$$$$| $$  | $$|  $$$$$$$| $$|  $$$$$$$| $$       /$$$$$$$/
+// |__/  |__/ \_______/|__/  |__/ \_______/|__/ \_______/|__/      |_______/ 
+                                                                          
+                                                                          
+                                                                          
 
 
 void unknownMessageHandler(Message* message){
@@ -189,84 +119,48 @@ void errorMessageHandler(Message* message){
 
 void testMessageHandler(Message* message){
 
-    readMessageHeader(message);
-    readMessageString(message);   
-    // char readBuffer[BUFFER_LEN];
-    // readFromSocket(message->readSocket, readBuffer, BUFFER_LEN);
-    // // TODO: Implement testMessageHandler.
-    
-    
+    // printf("messageTotalLen: %d\n\n", messageTotalLen(message));
+
+    char messageString [messageTotalLen(message) + 100];
+    messageToString(message, messageString);
+
+    logm(DEBUG, "%s \n", messageString);
     
     return;
 }
 
-// uint32_t parseInt(char* buffer){
-//     uint32_t value = (uint32_t)buffer[0];
-//     value = ntohl(value);
-
-//     return value;
-// }
-
-// void readHeader(int socket, Message* message){
-
-//     char buffer[BUFFER_LEN];
-//     message->bytesReceived += readFromSocket(socket, buffer, BUFFER_LEN);
-
-//     int index = 0;
-
-//     message->protocolId = parseInt(buffer + index);
-//     index += sizeof(uint32_t);
-
-//     message->clientId = parseInt(buffer + index);
-//     index += sizeof(uint32_t);
-
-//     message->crc = parseInt(buffer + index);
-//     index += sizeof(uint32_t);
-
-//     message->dataSize = parseInt(buffer + index);
-//     index += sizeof(uint32_t);
-
-//     logm(DEBUG, "Received header: protocol: %d//client: %d//crc: %d//data size: %d",
-//         message->protocolId,
-//         message->clientId,
-//         message->crc,
-//         message->dataSize);
-
-//     return;
-// }
-
-// void readData(int socket, Message* message){
-
-//     message->data = malloc(sizeof(uint8_t) * message->dataSize);
-//     if(message->data == NULL){
-//         logm(FATAL, "Error allocating memory for incoming data (%d bytes).",
-//         sizeof(uint8_t) * message->dataSize);
-//         exit(EXIT_FAILURE);
-//     }
-
-//     message->bytesReceived += readFromSocket(socket, message->data, message->dataSize);
-
-//     // TODO: Data received logging.
-
-//     return;
-// }
 
 
- 
+
+//    _     _      _     _      _     _      _     _      _     _      _     _      _     _      _     _   
+//   (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)  
+//    / ._. \      / ._. \      / ._. \      / ._. \      / ._. \      / ._. \      / ._. \      / ._. \   
+//  __\( Y )/__  __\( Y )/__  __\( Y )/__  __\( Y )/__  __\( Y )/__  __\( Y )/__  __\( Y )/__  __\( Y )/__ 
+// (_.-/'-'\-._)(_.-/'-'\-._)(_.-/'-'\-._)(_.-/'-'\-._)(_.-/'-'\-._)(_.-/'-'\-._)(_.-/'-'\-._)(_.-/'-'\-._)
+//    || H ||      || A ||      || N ||      || D ||      || L ||      || E ||      || R ||      || S ||   
+//  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._ 
+// (.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)(.-./`-`\.-.)(.-./`-`\.-.)
+//  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-' 
 
 
-// int readByte(int socket){
+int messageTotalLen(Message* message){
+    int len = message->messageLen   + sizeof(message->messageId) 
+                                    + sizeof(message->clientId)
+                                    + sizeof(message->bytesSent);
+    return len;
+}
 
-//     uint8_t newChar;
+void messageToString(Message* message, char* buffer){
+
+    sprintf(buffer, "Received message:\n\t* messageID: %d\n\t* clientID: %d\n\t* message Length: %d\n\t%s\n",
+        message->messageId,
+        message->clientId,
+        message->messageLen,
+        message->body);
+
+        return;
+}
+
+void messageParseJson(Message* message){
     
-//     errno = 0;
-//     int bytesRead = read(socket, &newChar, sizeof(uint8_t));
-
-//     if(bytesRead == -1){
-//         logm(ERROR, "Unable to read from socket");
-//         return -1;
-//     }
-
-//     return (int)newChar;
-// }
-
+}

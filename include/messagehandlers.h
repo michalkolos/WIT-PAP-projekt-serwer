@@ -32,8 +32,8 @@ void unknownMessageHandler(Message* message);
 void errorMessageHandler(Message* message);
 void testMessageHandler(Message* message);
 
-int readFromSocket(int socket, char* buffer, int size);
-
+int messageTotalLen(Message* message);
+void messageToString(Message* message, char* buffer);
 
 
 #endif

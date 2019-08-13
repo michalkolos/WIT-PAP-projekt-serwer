@@ -21,25 +21,6 @@ uint32_t readIntFromSocket(int socket){
     return inInt;
 }
 
-
-void messageInit(int socket, Message* message){
-
-    message->readSocket = socket;
-    message->error = 0;
-    message->bytesReceived = 0;
-    message->bytesSent = 0;
-    message->dataSize = 0;
-    message->crc = 0;
-    message->messageId = 0;
-
-
-
-    logm(DEBUG, "Created new message struct for incoming message [socket: %d]",
-        message->readSocket);
-
-    return;
-}
-
 void readMessageFromSocket(Message* message){
 
     message->messageId = readIntFromSocket(message->readSocket);
@@ -51,11 +32,13 @@ void readMessageFromSocket(Message* message){
     //TODO:read error handling
     read(message->readSocket, message->body, message->messageLen);
 
-    logm(DEBUG, "Received message:\n\t* messageID: %d\n\t* clientID: %d\n\t* message Length: %d\n\t%s\n",
-        message->messageId,
-        message->clientId,
-        message->messageLen,
-        message->body);
+    // logm(DEBUG, "Received message:\n\t* messageID: %d\n\t* clientID: %d\n\t* message Length: %d\n\t%s\n",
+    //     message->messageId,
+    //     message->clientId,
+    //     message->messageLen,
+    //     message->body);
+
+    runHandler(message);
 
     return;
 }
