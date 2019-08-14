@@ -95,7 +95,6 @@ void logm(int level, const char *format, ...){
 
     va_start(arg, format);
 
-
     vsnprintf(message->string, LOG_MESSAGE_LEN, format, arg);
 
     va_end(arg);

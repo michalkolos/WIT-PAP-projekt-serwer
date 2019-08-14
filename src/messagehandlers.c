@@ -13,6 +13,8 @@
 #include "connection.h"
 #include "log.h"
 
+#include "cJSON.h"
+
 
 MessageHandlers* messageHandlers;
 
@@ -118,10 +120,10 @@ void errorMessageHandler(Message* message){
 }
 
 void testMessageHandler(Message* message){
-
-    // printf("messageTotalLen: %d\n\n", messageTotalLen(message));
-
-    char messageString [messageTotalLen(message) + 100];
+ 
+    int messageLen = messageTotalLen(message) + 100;
+ 
+    char messageString [messageLen];
     messageToString(message, messageString);
 
     logm(DEBUG, "%s \n", messageString);
@@ -158,9 +160,11 @@ void messageToString(Message* message, char* buffer){
         message->messageLen,
         message->body);
 
+    // printf("%s\n", message->body);
+
         return;
 }
 
 void messageParseJson(Message* message){
-    
+
 }

@@ -13,7 +13,7 @@
 // ======================================
 
 
-#define LOG_MESSAGE_LEN 512
+#define LOG_MESSAGE_LEN 2000
 
 // #define log(...) logm(__VA_ARGS__, NULL)
 

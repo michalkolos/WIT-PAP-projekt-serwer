@@ -40,6 +40,8 @@ void readMessageFromSocket(Message* message){
 
     runHandler(message);
 
+    // printf("%s\n", message->body);
+
     return;
 }
 
