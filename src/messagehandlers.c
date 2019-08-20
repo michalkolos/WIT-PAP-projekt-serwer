@@ -12,6 +12,7 @@
 #include "messagehandlers.h"
 #include "connection.h"
 #include "log.h"
+#include "serialization.h"
 
 #include "cJSON.h"
 
@@ -120,13 +121,21 @@ void errorMessageHandler(Message* message){
 }
 
 void testMessageHandler(Message* message){
- 
-    int messageLen = messageTotalLen(message) + 100;
- 
-    char messageString [messageLen];
-    messageToString(message, messageString);
 
-    logm(DEBUG, "%s \n", messageString);
+
+    cJSON* json = json_serialToObject(message);
+    // logm(INFO, "%s", json_objectToSerialHumanReadable(json));
+ 
+    // int messageLen = messageTotalLen(message) + 100;
+ 
+    // char messageString [messageLen];
+    // messageToString(message, messageString);
+
+    logm(DEBUG, "Received message:\n\t* messageID: %d\n\t* clientID: %d\n\t* message Length: %d\n\t%s\n",
+        message->messageId,
+        message->clientId,
+        message->messageLen,
+        json_objectToSerialHumanReadable(json));
     
     return;
 }
@@ -162,9 +171,5 @@ void messageToString(Message* message, char* buffer){
 
     // printf("%s\n", message->body);
 
-        return;
-}
-
-void messageParseJson(Message* message){
-
+    return;
 }

@@ -1,6 +1,7 @@
 #ifndef LOG_H
 #define LOG_H
 
+#include <pthread.h>
 
 
 // 8""8""8                               
