@@ -1,0 +1,52 @@
+# ------------------------------------------------
+# Generic Makefile
+#
+# Author: yanick.rochon@gmail.com
+# Date  : 2011-08-10
+#
+# Source :
+#   https://stackoverflow.com/questions/7004702/how-can-i-create-a-makefile-for-c-projects-with-src-obj-and-bin-subdirectories
+#
+# ------------------------------------------------
+
+# project name (generate executable with this name)
+TARGET   = run_server.bin
+
+# change these to proper directories where each file should be
+SRCDIR   = src
+HDRDIR   = include
+OBJDIR   = obj
+BINDIR   = bin
+
+SOURCES  := $(wildcard $(SRCDIR)/*.c)
+INCLUDES := $(wildcard $(HDRDIR)/*.h)
+OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+rm       = rm -f
+
+# compiler
+CC       = gcc
+# compiling flags here
+CFLAGS   = -std=c11 -Wall -I. -I$(HDRDIR)
+
+# linker
+LINKER   = gcc
+# linking flags here
+LFLAGS   = -Wall -I. -lm -lpthread
+
+$(BINDIR)/$(TARGET):	$(OBJECTS)
+	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
+	@echo "Linking complete!"
+
+$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+	@echo "Compiled "$<" successfully!"
+
+.PHONY:	clean
+clean:
+	@$(rm) $(OBJECTS)
+	@echo "Cleanup complete!"
+
+.PHONY:	remove
+remove:	clean
+	@$(rm) $(BINDIR)/$(TARGET)
+	@echo "Executable removed!"
